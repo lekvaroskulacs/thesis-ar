@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.XR.ARFoundation;
+using UnityEngine.XR.ARSubsystems;
 
 public class MultipleImageTrackingManager : MonoBehaviour
 {
@@ -15,11 +16,8 @@ public class MultipleImageTrackingManager : MonoBehaviour
 
     private Dictionary<string, string> catalogue = new Dictionary<string, string>
     {
-        { "BottomLeft", "Prefabs/Board/BottomLeft" },
-        { "BottomRight", "Prefabs/Board/BottomRight" },
-        { "TopLeft", "Prefabs/Board/TopLeft"},
-        { "TopRight", "Prefabs/Board/TopRight"},
-        { "Fireball", "Prefabs/Cards/Fireball" },
+        { "Board", "Prefabs/Board/Board" },
+        { "Skeleton", "Prefabs/Cards/Creatures/Skeleton" },
         { "HealingPotion", "Prefabs/Cards/HealingPotion" }
         // Add more here as needed
     };
@@ -152,5 +150,18 @@ public class MultipleImageTrackingManager : MonoBehaviour
 
         var gameObject = nameToGameObject[trackedImage.referenceImage.name];
         gameObject.SetActive(false);
+    }
+
+    public TrackingState GetTrackingStateByReferenceImageName(string name)
+    {
+        foreach (var image in trackedImageManager.trackables)
+        {
+            if (image.referenceImage.name == name)
+            {
+                return image.trackingState;
+            }
+        }
+        Debug.LogWarning($"Reference image with name \"{name}\" was not found!");
+        return TrackingState.None;
     }
 }

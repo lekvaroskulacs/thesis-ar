@@ -3,7 +3,7 @@ using System.Data.SqlTypes;
 using UnityEditor;
 using UnityEngine;
 
-
+[Serializable]
 public class Corners
 {
     public GameObject BottomLeft;
@@ -20,7 +20,7 @@ internal enum BoardState
 public class Board : MonoBehaviour
 {
     private BoardTracker boardTracker;
-    public Corners corners;
+    [SerializeField] private Corners corners;
     private BoardState state;
 
     private Action boardReady;
@@ -50,12 +50,10 @@ public class Board : MonoBehaviour
 
     void HandleNotReady()
     {
-        if (boardTracker.CornersReady())
+        if (boardTracker.GetTrackedObjectStatus() == UnityEngine.XR.ARSubsystems.TrackingState.Tracking)
         {
-            Debug.Log("Board is ready");
-            corners = boardTracker.GetCorners();
+            Debug.Log("Board ready");
             state = BoardState.READY;
-            boardReady?.Invoke();
         }
     }
 

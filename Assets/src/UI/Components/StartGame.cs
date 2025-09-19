@@ -7,35 +7,20 @@ public class StartGame : MonoBehaviour
     public void GameStarted()
     {
         var list = new List<ReferenceImageInfo>();
-        var tex = Resources.Load<Texture2D>("Images/Board/board_bottom_left");
-
+        var tex = Resources.Load<Texture2D>("Images/Board/board");
         list.Add(new ReferenceImageInfo(
             tex,
-            "BottomLeft",
+            "Board",
             0.1f
         ));
 
-        tex = Resources.Load<Texture2D>("Images/Board/board_bottom_right");
+
+        tex = Resources.Load<Texture2D>("Images/Cards/Creatures/skeleton");
         list.Add(new ReferenceImageInfo(
             tex,
-            "BottomRight",
+            "Skeleton",
             0.1f
         ));
-
-        tex = Resources.Load<Texture2D>("Images/Board/board_top_left");
-        list.Add(new ReferenceImageInfo(
-            tex,
-            "TopLeft",
-            0.1f
-        ));
-
-        tex = Resources.Load<Texture2D>("Images/Board/test");
-        list.Add(new ReferenceImageInfo(
-            tex,
-            "TopRight",
-            0.1f
-        ));
-
 
 
         var library = GameObject.FindGameObjectWithTag("Origin").GetComponent<MutableLibrary>();
@@ -45,6 +30,6 @@ public class StartGame : MonoBehaviour
 
         var imgManager = GameObject.FindGameObjectWithTag("Origin").GetComponent<MultipleImageTrackingManager>();
 
-        imgManager.SetTrackedEntities(new List<string> { "BottomLeft", "BottomRight", "TopLeft", "TopRight" });
+        imgManager.SetTrackedEntities(new List<string> { "Board", "Skeleton" });
     }
 }

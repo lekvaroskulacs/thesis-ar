@@ -6,6 +6,8 @@ TagManager:
   tags:
   - Logger
   - Origin
+  - MenuPlayer
+  - NetworkManager
   layers:
   - Default
   - TransparentFX
