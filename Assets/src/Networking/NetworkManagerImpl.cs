@@ -3,6 +3,8 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Mirror;
 using System.Collections.Generic;
+using Mirror.Examples.Basic;
+using UnityEditor;
 
 
 /*
@@ -10,92 +12,133 @@ using System.Collections.Generic;
 	API Reference: https://mirror-networking.com/docs/api/Mirror.NetworkManager.html
 */
 
-public class Players<Type>
-{
-    private readonly List<Type> players = new List<Type>(2);
-
-    /// <summary>
-    /// Adds a player. Returns true if added, false if list is full or already contains the player.
-    /// </summary>
-    public bool Add(Type player)
-    {
-        if (players.Count >= 2 || players.Contains(player))
-        {
-            return false;
-        }
-
-        players.Add(player);
-
-        return true;
-    }
-
-    /// <summary>
-    /// Removes a player. Returns true if removed, false if not found.
-    /// </summary>
-    public bool Remove(Type player)
-    {
-        bool removed = players.Remove(player);
-        return removed;
-    }
-
-    /// <summary>
-    /// Returns the other player than the one passed in, or default if not found.
-    /// </summary>
-    public Type Other(Type player)
-    {
-        if (players.Count != 2) return default;
-
-        if (EqualityComparer<Type>.Default.Equals(players[0], player))
-            return players[1];
-
-        if (EqualityComparer<Type>.Default.Equals(players[1], player))
-            return players[0];
-
-        return default;
-    }
-
-    public List<Type> data
-    {
-        get
-        {
-            return players;
-        }
-    }
-
-    public Type host
-    {
-        get
-        {
-            if (players.Count == 0) return default;
-            return players[0];
-        }
-    }
-}
 
 
 public class NetworkManagerImpl : NetworkManager
 {
+    [Header("Scenes")]
+    [SerializeField] private string gameScene;
+    [SerializeField] private string menuScene;
 
-    public Players<MenuPlayer> players = new Players<MenuPlayer>();
+    private string currentScene;
+
+    public NetworkPlayers<NetworkMenuPlayer> players = new NetworkPlayers<NetworkMenuPlayer>();
+    public NetworkPlayers<NetworkGamePlayer> gamePlayers = new NetworkPlayers<NetworkGamePlayer>();
+
+    public override void Awake()
+    {
+        base.Awake();
+        currentScene = menuScene;
+    }
 
     public override void OnServerAddPlayer(NetworkConnectionToClient conn)
     {
-        GameObject playerInstance = Instantiate(playerPrefab);
-        playerInstance.name = $"{playerPrefab.name} [connId={conn.connectionId}]";
+        var prefab = currentScene == gameScene ?
+            Resources.Load<GameObject>("Prefabs/GamePlayer") :
+            Resources.Load<GameObject>("Prefabs/MenuPlayer");
+
+        GameObject playerInstance = Instantiate(prefab);
+        playerInstance.name = $"{prefab.name} [connId={conn.connectionId}]";
         NetworkServer.AddPlayerForConnection(conn, playerInstance);
 
-        var menuPlayer = playerInstance.GetComponent<MenuPlayer>();
+        if (currentScene == gameScene) return;
+
+        var menuPlayer = playerInstance.GetComponent<NetworkMenuPlayer>();
         menuPlayer.displayName = "";
         players.Add(menuPlayer);
     }
 
     public override void OnServerDisconnect(NetworkConnectionToClient conn)
     {
-        var playerInstance = conn.identity.GetComponent<MenuPlayer>();
+        if (currentScene == menuScene)
+        {
+            MenuDisconnected(conn);
+        }
+        else
+        {
+            GameDisconnected(conn);
+        }
+    }
+
+    void MenuDisconnected(NetworkConnectionToClient conn)
+    {
+        var playerInstance = conn.identity.GetComponent<NetworkMenuPlayer>();
 
         NetworkServer.DestroyPlayerForConnection(conn);
 
         players.Remove(playerInstance);
+    }
+
+    // TODO: Somehow we should handle the client trying to reconnect and maybe verifying if its the same one
+    void GameDisconnected(NetworkConnectionToClient conn)
+    {
+        var playerInstance = conn.identity.GetComponent<NetworkGamePlayer>();
+
+        NetworkServer.DestroyPlayerForConnection(conn);
+
+        gamePlayers.Remove(playerInstance);
+    }
+
+
+    public void SetPlayerName(NetworkConnection conn, string name)
+    {
+        var player = conn is null ? players.host : conn.identity.GetComponent<NetworkMenuPlayer>();
+        if (player != null)
+        {
+            player.displayName = name;
+            UpdateDisplayNames();
+        }
+    }
+
+
+    public override void OnServerChangeScene(string newSceneName)
+    {
+        currentScene = newSceneName;
+    }
+
+    public override void OnServerSceneChanged(string newSceneName)
+    {
+        if (newSceneName == gameScene)
+        {
+            Invoke("LoadGame", 1f);
+        }
+    }
+
+    void LoadGame()
+    {
+        var list = new List<ReferenceImageInfo>();
+        var tex = Resources.Load<Texture2D>("Images/Board/board");
+        list.Add(new ReferenceImageInfo(
+            tex,
+            "Board",
+            0.1f
+        ));
+
+
+        tex = Resources.Load<Texture2D>("Images/Cards/Creatures/skeleton");
+        list.Add(new ReferenceImageInfo(
+            tex,
+            "Skeleton",
+            0.1f
+        ));
+
+
+        var library = GameObject.FindGameObjectWithTag("Origin").GetComponent<MutableLibrary>();
+
+        library.AddReferenceImages(list);
+        library.StartTrackingImages();
+
+        var imgManager = GameObject.FindGameObjectWithTag("Origin").GetComponent<MultipleImageTrackingManager>();
+
+        imgManager.SetTrackedEntities(new List<string> { "Board", "Skeleton" });
+    }
+
+
+    #region RPCs
+
+    public void GameStartable()
+    {
+        players.host.RpcGameStartable();
     }
 
     public void UpdateDisplayNames()
@@ -107,16 +150,5 @@ public class NetworkManagerImpl : NetworkManager
         }
     }
 
-    public void SetPlayerName(NetworkConnection conn, string name)
-    {
-        var player = conn is null ? players.host : conn.identity.GetComponent<MenuPlayer>();
-        if (player != null)
-        {
-            player.displayName = name;
-            UpdateDisplayNames();
-        }
-    }
-
-
-
+    #endregion
 }

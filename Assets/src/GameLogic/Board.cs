@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Data.SqlTypes;
+using Mirror;
 using UnityEditor;
 using UnityEngine;
 
@@ -17,13 +19,24 @@ internal enum BoardState
     NOT_READY, READY, PLAYING
 }
 
-public class Board : MonoBehaviour
+public class Board : NetworkBehaviour
 {
-    private BoardTracker boardTracker;
     [SerializeField] private Corners corners;
+    private BoardTracker boardTracker;
     private BoardState state;
-
     private Action boardReady;
+
+
+    [SerializeField] private List<CreatureField> creatureFields;
+    private Players<GamePlayer> players;
+
+
+    private Vector3 topLeft;
+    private float width;
+    private float height;
+
+    public List<GameObject> playableCardGameObjects;
+
 
     public void SubscribeToBoardReady(Action callback)
     {
@@ -32,7 +45,8 @@ public class Board : MonoBehaviour
 
     void Start()
     {
-        boardTracker = GetComponent<BoardTracker>();
+        boardTracker = GameObject.FindWithTag("BoardTracker").GetComponent<BoardTracker>();
+        boardTracker.board = this;
         corners = new Corners();
     }
 
@@ -40,28 +54,59 @@ public class Board : MonoBehaviour
     {
         if (state == BoardState.NOT_READY)
         {
-            HandleNotReady();
+            UpdateNotReady();
         }
         else if (state == BoardState.READY)
         {
-            HandleReady();
+            UpdateReady();
         }
     }
 
-    void HandleNotReady()
+    void UpdateNotReady()
     {
         if (boardTracker.GetTrackedObjectStatus() == UnityEngine.XR.ARSubsystems.TrackingState.Tracking)
         {
             Debug.Log("Board ready");
             state = BoardState.READY;
+            OnBoardReady();
         }
     }
 
-    void HandleReady()
+    void UpdateReady()
     {
+        foreach (var obj in playableCardGameObjects)
+        {
+            CreatureField slot = null;
+            foreach (var field in creatureFields)
+            {
+                if (field.IsGameObjectOnCreatureField(obj))
+                {
+                    slot = field;
+                }
+            }
 
+            if (slot)
+            {
+                obj.SetActive(true);
+            }
+            else
+            {
+                obj.SetActive(false);
+            }
+        }
     }
-    
+
+    void OnBoardReady()
+    {
+        // TODO:
+        // Set topleft, width height calculated from corners
+        // Then create a field in the middle maybe?
+        //var field = new CreatureField();
+        //fields.Add(field);
+        playableCardGameObjects = boardTracker.allLoadedGameObjects;
+    }
+
+
     public Corners GetCorners()
     {
         return corners;

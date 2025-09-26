@@ -32,6 +32,16 @@ public class MultipleImageTrackingManager : MonoBehaviour
         OnPrefabsLoaded += callback;
     }
 
+    public List<GameObject> allLoadedGameObjects
+    {
+        get
+        {
+            List<GameObject> objects = new List<GameObject>();
+            objects.AddRange(nameToGameObject.Values);
+            return objects;
+        }
+    }
+
     void Start()
     {
         trackedImageManager = GetComponent<ARTrackedImageManager>();

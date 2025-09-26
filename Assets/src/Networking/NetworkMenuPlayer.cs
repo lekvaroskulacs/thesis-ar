@@ -2,7 +2,7 @@ using Mirror;
 using Unity.VisualScripting;
 using UnityEngine;
 
-public class MenuPlayer : NetworkBehaviour
+public class NetworkMenuPlayer : NetworkBehaviour
 {
     MenuPlayerUIHandler ui;
     NetworkManagerImpl _networkManager;
@@ -19,12 +19,13 @@ public class MenuPlayer : NetworkBehaviour
         }
     }
 
-    [SyncVar(hook = nameof(OnReadyStatusChanged))]
-    private bool isReady;
+    [SyncVar]
+    public bool isReady;
 
-    public bool isHost { get; set; } = false;
     [SyncVar]
     public string displayName;
+
+    public bool isHost { get; set; } = false;
 
 
     void Awake()
@@ -61,9 +62,32 @@ public class MenuPlayer : NetworkBehaviour
         Debug.Log($"SetOpponentName called with name {name}");
     }
 
-    void OnReadyStatusChanged(bool oldValue, bool newValue)
+    public bool ReadyUp()
     {
+        if (isHost)
+        {
+            Debug.Log("Something went wrong! Readying up is not a defined action for the host.");
+            return false;
+        }
 
+        CmdSetReadyStatus(true);
+        return true;
+    }
+
+    [Command]
+    public void CmdSetReadyStatus(bool ready)
+    {
+        isReady = ready;
+        networkManager.GameStartable();
+    }
+
+    [ClientRpc]
+    public void RpcGameStartable()
+    {
+        if (isHost)
+        {
+            ui.GameStartable();
+        }
     }
 
 }

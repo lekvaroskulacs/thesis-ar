@@ -8,6 +8,8 @@ TagManager:
   - Origin
   - MenuPlayer
   - NetworkManager
+  - Board
+  - BoardTracker
   layers:
   - Default
   - TransparentFX

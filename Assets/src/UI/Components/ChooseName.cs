@@ -15,6 +15,10 @@ public class ChooseName : NetworkBehaviour
     [SerializeField] private GameObject clientLobbyPanel;
     [SerializeField] private TMP_InputField clientNameInputField;
 
+    [Header("Buttons")]
+    [SerializeField] private Button hostConfirmButton;
+    [SerializeField] private Button clientConfirmButton;
+
     private NetworkManagerImpl _networkManager;
     private NetworkManagerImpl networkManager
     {
@@ -34,6 +38,8 @@ public class ChooseName : NetworkBehaviour
     {
         hostNameInputField.onValueChanged.AddListener(OnValueChangedHost);
         clientNameInputField.onValueChanged.AddListener(OnValueChangedClient);
+        hostConfirmButton.onClick.AddListener(OnHostConfirmClicked);
+        clientConfirmButton.onClick.AddListener(OnClientConfirmClicked);
     }
 
     public void OnHostConfirmClicked()
