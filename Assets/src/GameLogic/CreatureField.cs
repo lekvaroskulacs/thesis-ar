@@ -1,18 +1,14 @@
+using Mirror;
 using Mirror.Examples.Basic;
 using Unity.VisualScripting;
 using UnityEngine;
 
 
-class CreatureField : MonoBehaviour
+public class CreatureField : MonoBehaviour
 {
-    public GamePlayer owningPlayer;
+    public NetworkGamePlayer owningPlayer;
 
     [SerializeField] private SpriteRenderer field;
-
-    public Vector3 topLeft { get; set; }
-    public float width { get; set; }
-    public float height { get; set; }
-
 
     public bool IsGameObjectOnCreatureField(GameObject obj)
     {
@@ -23,9 +19,11 @@ class CreatureField : MonoBehaviour
         if (min.x < pos.x && pos.x < max.x &&
             min.z < pos.z && pos.z < max.z)
         {
-            return true;        
+            return true;
         }
-        
+
         return false;
     }
+
+    
 }

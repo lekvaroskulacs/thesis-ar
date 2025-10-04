@@ -2,17 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
 using Mirror;
+using Mirror.BouncyCastle.Crypto.Modes;
 using UnityEditor;
 using UnityEngine;
-
-[Serializable]
-public class Corners
-{
-    public GameObject BottomLeft;
-    public GameObject BottomRight;
-    public GameObject TopLeft;
-    public GameObject TopRight;
-}
 
 internal enum BoardState
 {
@@ -21,21 +13,29 @@ internal enum BoardState
 
 public class Board : NetworkBehaviour
 {
-    [SerializeField] private Corners corners;
     private BoardTracker boardTracker;
     private BoardState state;
     private Action boardReady;
 
 
-    [SerializeField] private List<CreatureField> creatureFields;
-    private Players<GamePlayer> players;
+    [SerializeField] private Battlefield battlefield;
+    private NetworkPlayers<NetworkGamePlayer> players;
 
-
-    private Vector3 topLeft;
-    private float width;
-    private float height;
 
     public List<GameObject> playableCardGameObjects;
+
+    private NetworkManagerImpl _networkManager;
+    private NetworkManagerImpl networkManager
+    {
+        get
+        {
+            if (_networkManager != null)
+            {
+                return _networkManager;
+            }
+            return _networkManager = NetworkManager.singleton as NetworkManagerImpl;
+        }
+    }
 
 
     public void SubscribeToBoardReady(Action callback)
@@ -47,7 +47,14 @@ public class Board : NetworkBehaviour
     {
         boardTracker = GameObject.FindWithTag("BoardTracker").GetComponent<BoardTracker>();
         boardTracker.board = this;
-        corners = new Corners();
+        if (networkManager.players.data.Count == 2)
+        {
+            players = networkManager.gamePlayers;
+        }
+        else
+        {
+            throw new Exception("Players not connected yet!");
+        }
     }
 
     void Update()
@@ -77,7 +84,7 @@ public class Board : NetworkBehaviour
         foreach (var obj in playableCardGameObjects)
         {
             CreatureField slot = null;
-            foreach (var field in creatureFields)
+            foreach (var field in battlefield.allFields)
             {
                 if (field.IsGameObjectOnCreatureField(obj))
                 {
@@ -98,17 +105,17 @@ public class Board : NetworkBehaviour
 
     void OnBoardReady()
     {
-        // TODO:
-        // Set topleft, width height calculated from corners
-        // Then create a field in the middle maybe?
-        //var field = new CreatureField();
-        //fields.Add(field);
         playableCardGameObjects = boardTracker.allLoadedGameObjects;
+        foreach (var field in battlefield.hostFields)
+        {
+            field.owningPlayer = players.host;
+            Debug.Log(field.owningPlayer);
+        }
+        foreach (var field in battlefield.guestFields)
+        {
+            field.owningPlayer = players.Other(players.host);
+            Debug.Log(field.owningPlayer);
+        }
     }
 
-
-    public Corners GetCorners()
-    {
-        return corners;
-    }
 }

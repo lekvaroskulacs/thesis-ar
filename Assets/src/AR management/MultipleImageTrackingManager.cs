@@ -18,7 +18,9 @@ public class MultipleImageTrackingManager : MonoBehaviour
     {
         { "Board", "Prefabs/Board/Board" },
         { "Skeleton", "Prefabs/Cards/Creatures/Skeleton" },
-        { "HealingPotion", "Prefabs/Cards/HealingPotion" }
+        { "Fairy", "Prefabs/Cards/Creatures/GreenFairy" },
+        { "Cactus", "Prefabs/Cards/Creatures/Cactus"},
+        { "Beholder", "Prefabs/Cards/Creatures/Beholder"}
         // Add more here as needed
     };
 

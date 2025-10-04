@@ -3270,6 +3270,8 @@ MonoBehaviour:
   timeInterpolationGui: 0
   gameScene: GameScene
   menuScene: MenuScene
+  startingPlayer: 2
+  turnManager: {fileID: 0}
 --- !u!4 &1165464555
 Transform:
   m_ObjectHideFlags: 0

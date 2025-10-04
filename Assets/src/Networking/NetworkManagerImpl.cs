@@ -2,9 +2,9 @@ using System;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Mirror;
+using System.Collections;
 using System.Collections.Generic;
-using Mirror.Examples.Basic;
-using UnityEditor;
+using UnityEngine.XR.ARFoundation;
 
 
 /*
@@ -12,7 +12,12 @@ using UnityEditor;
 	API Reference: https://mirror-networking.com/docs/api/Mirror.NetworkManager.html
 */
 
-
+enum StartingPlayer
+{
+    Host,
+    Guest,
+    Random
+}
 
 public class NetworkManagerImpl : NetworkManager
 {
@@ -20,15 +25,24 @@ public class NetworkManagerImpl : NetworkManager
     [SerializeField] private string gameScene;
     [SerializeField] private string menuScene;
 
-    private string currentScene;
+    [Header("Configuration")]
+    [SerializeField] private StartingPlayer startingPlayer;
 
+    private string currentScene;
     public NetworkPlayers<NetworkMenuPlayer> players = new NetworkPlayers<NetworkMenuPlayer>();
     public NetworkPlayers<NetworkGamePlayer> gamePlayers = new NetworkPlayers<NetworkGamePlayer>();
+    public TurnManager turnManager;
+
 
     public override void Awake()
     {
         base.Awake();
         currentScene = menuScene;
+    }
+
+    public override void Update()
+    {
+        base.Update();
     }
 
     public override void OnServerAddPlayer(NetworkConnectionToClient conn)
@@ -41,11 +55,18 @@ public class NetworkManagerImpl : NetworkManager
         playerInstance.name = $"{prefab.name} [connId={conn.connectionId}]";
         NetworkServer.AddPlayerForConnection(conn, playerInstance);
 
-        if (currentScene == gameScene) return;
+        if (currentScene == gameScene)
+        {
+            var gamePlayer = playerInstance.GetComponent<NetworkGamePlayer>();
+            gamePlayers.Add(gamePlayer);
+        }
+        else
+        {
+            var menuPlayer = playerInstance.GetComponent<NetworkMenuPlayer>();
+            menuPlayer.displayName = "";
+            players.Add(menuPlayer);
+        }
 
-        var menuPlayer = playerInstance.GetComponent<NetworkMenuPlayer>();
-        menuPlayer.displayName = "";
-        players.Add(menuPlayer);
     }
 
     public override void OnServerDisconnect(NetworkConnectionToClient conn)
@@ -100,8 +121,19 @@ public class NetworkManagerImpl : NetworkManager
     {
         if (newSceneName == gameScene)
         {
-            Invoke("LoadGame", 1f);
+            StartCoroutine(WaitForConfigReady());
         }
+    }
+
+    IEnumerator WaitForConfigReady()
+    {
+        yield return new WaitUntil(() =>
+        {
+            bool arReady = ARSession.state == ARSessionState.SessionTracking;
+            bool playersReady = gamePlayers.data.Count == 2;
+            return arReady && playersReady;    
+        });
+        LoadGame();
     }
 
     void LoadGame()
@@ -122,6 +154,20 @@ public class NetworkManagerImpl : NetworkManager
             0.1f
         ));
 
+        tex = Resources.Load<Texture2D>("Images/Cards/Creatures/fairy");
+        list.Add(new ReferenceImageInfo(
+            tex,
+            "Fairy",
+            0.1f
+        ));
+
+        tex = Resources.Load<Texture2D>("Images/Cards/Creatures/cactus");
+        list.Add(new ReferenceImageInfo(
+            tex,
+            "Cactus",
+            0.1f
+        ));
+
 
         var library = GameObject.FindGameObjectWithTag("Origin").GetComponent<MutableLibrary>();
 
@@ -130,7 +176,23 @@ public class NetworkManagerImpl : NetworkManager
 
         var imgManager = GameObject.FindGameObjectWithTag("Origin").GetComponent<MultipleImageTrackingManager>();
 
-        imgManager.SetTrackedEntities(new List<string> { "Board", "Skeleton" });
+        imgManager.SetTrackedEntities(new List<string> { "Board", "Skeleton", "Fairy", "Cactus" });
+
+        turnManager = GameObject.FindWithTag("TurnManager").GetComponent<TurnManager>();
+        NetworkGamePlayer sPlayer = null;
+        switch (startingPlayer)
+        {
+            case StartingPlayer.Host:
+                sPlayer = gamePlayers.host;
+                break;
+            case StartingPlayer.Guest:
+                sPlayer = gamePlayers.Other(gamePlayers.host);
+                break;
+            case StartingPlayer.Random:
+                sPlayer = gamePlayers.data[UnityEngine.Random.value > 0.5f ? 1 : 0];
+                break;
+        }
+        turnManager.Init(gamePlayers, sPlayer);
     }
 
 

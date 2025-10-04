@@ -10,6 +10,9 @@ TagManager:
   - NetworkManager
   - Board
   - BoardTracker
+  - NetworkGamePlayer
+  - TurnManager
+  - GamePlayer
   layers:
   - Default
   - TransparentFX
