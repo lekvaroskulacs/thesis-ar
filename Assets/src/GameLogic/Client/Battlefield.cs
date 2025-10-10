@@ -9,7 +9,7 @@ public class Battlefield : MonoBehaviour
         get
         {
             return _hostFields;
-        }    
+        }
     }
 
     [SerializeField] private List<CreatureField> _guestFields;
@@ -32,5 +32,16 @@ public class Battlefield : MonoBehaviour
         }
     }
 
+    public List<CreatureField> FieldsOfPlayer(NetworkGamePlayer player)
+    {
+        if (!player.isServer)
+        {
+            return guestFields;
+        }
+        else
+        {
+            return hostFields;
+        }
+    }
 
 }

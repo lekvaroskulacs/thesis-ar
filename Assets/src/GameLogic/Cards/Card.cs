@@ -1,5 +1,7 @@
 
-public class Card
+using UnityEngine;
+
+public class Card : MonoBehaviour
 {
     public int manaCost;
 }

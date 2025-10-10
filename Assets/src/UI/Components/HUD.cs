@@ -91,6 +91,7 @@ public class HUD : MonoBehaviour
             }
 
             turnStateDisplay.text = text;
+            manaDisplay.text = $"{player.mana}/{player.maxMana}";
         }
     }
 

@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
+using Newtonsoft.Json;
+
 
 public class MultipleImageTrackingManager : MonoBehaviour
 {
@@ -14,15 +17,7 @@ public class MultipleImageTrackingManager : MonoBehaviour
     private Dictionary<string, GameObject> nameToGameObject;
     public event Action OnPrefabsLoaded;
 
-    private Dictionary<string, string> catalogue = new Dictionary<string, string>
-    {
-        { "Board", "Prefabs/Board/Board" },
-        { "Skeleton", "Prefabs/Cards/Creatures/Skeleton" },
-        { "Fairy", "Prefabs/Cards/Creatures/GreenFairy" },
-        { "Cactus", "Prefabs/Cards/Creatures/Cactus"},
-        { "Beholder", "Prefabs/Cards/Creatures/Beholder"}
-        // Add more here as needed
-    };
+    private Dictionary<string, string> catalogue;
 
     public GameObject GetGameObjectByReferenceImageName(string name)
     {
@@ -56,7 +51,10 @@ public class MultipleImageTrackingManager : MonoBehaviour
         trackedImageManager.trackablesChanged.AddListener(OnTrackablesChanged);
 
         nameToGameObject = new Dictionary<string, GameObject>();
+        catalogue = CardCatalogue.GetCatalogue();
     }
+
+    
 
     void OnDestroy()
     {
@@ -69,6 +67,7 @@ public class MultipleImageTrackingManager : MonoBehaviour
         SetupTrackedPrefabs();
     }
 
+    // TODO: Don't instantiate creatures. they are locked in place on their creaturefield
     void SetupTrackedPrefabs()
     {
         if (instantiatedObjectsParent != null)
@@ -136,7 +135,7 @@ public class MultipleImageTrackingManager : MonoBehaviour
         }
 
         var gameObject = nameToGameObject[trackedImage.referenceImage.name];
-        gameObject.SetActive(true);
+        //gameObject.SetActive(true);
         gameObject.transform.position = trackedImage.transform.position;
         gameObject.transform.rotation = trackedImage.transform.rotation;
     }

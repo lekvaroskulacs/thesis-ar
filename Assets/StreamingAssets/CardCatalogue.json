@@ -1,0 +1,7 @@
+{
+    "Board": "Prefabs/Board/Board",
+    "Skeleton": "Prefabs/Cards/Creatures/Skeleton",
+    "Fairy": "Prefabs/Cards/Creatures/GreenFairy",
+    "Cactus": "Prefabs/Cards/Creatures/Cactus",
+    "Beholder": "Prefabs/Cards/Creatures/Beholder"
+}

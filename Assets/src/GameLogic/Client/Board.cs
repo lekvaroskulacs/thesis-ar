@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
+using System.Linq;
 using Mirror;
 using Mirror.BouncyCastle.Crypto.Modes;
+using Mirror.Examples.Basic;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.SocialPlatforms;
 
 internal enum BoardState
 {
@@ -19,8 +22,7 @@ public class Board : NetworkBehaviour
 
 
     [SerializeField] private Battlefield battlefield;
-    private NetworkPlayers<NetworkGamePlayer> players;
-
+    private NetworkGamePlayer localPlayer;
 
     public List<GameObject> playableCardGameObjects;
 
@@ -47,14 +49,13 @@ public class Board : NetworkBehaviour
     {
         boardTracker = GameObject.FindWithTag("BoardTracker").GetComponent<BoardTracker>();
         boardTracker.board = this;
-        if (networkManager.players.data.Count == 2)
-        {
-            players = networkManager.gamePlayers;
-        }
-        else
-        {
-            throw new Exception("Players not connected yet!");
-        }
+        networkManager.spawnPrefabs.AddRange(playableCardGameObjects);
+        var players = GameObject.FindGameObjectsWithTag("NetworkGamePlayer");
+        var player = players.Single(player => player.GetComponent<NetworkGamePlayer>().isLocalPlayer);
+        localPlayer = player.GetComponent<NetworkGamePlayer>();
+        localPlayer.board = this;
+        Debug.Log(localPlayer);
+        Debug.Log(localPlayer.board);
     }
 
     void Update()
@@ -84,7 +85,7 @@ public class Board : NetworkBehaviour
         foreach (var obj in playableCardGameObjects)
         {
             CreatureField slot = null;
-            foreach (var field in battlefield.allFields)
+            foreach (var field in battlefield.FieldsOfPlayer(localPlayer))
             {
                 if (field.IsGameObjectOnCreatureField(obj))
                 {
@@ -94,11 +95,16 @@ public class Board : NetworkBehaviour
 
             if (slot)
             {
-                obj.SetActive(true);
+                if (!slot.hasCreature)
+                {
+                    PlayCreature(obj.GetComponent<Creature>(), battlefield.FieldsOfPlayer(localPlayer).IndexOf(slot));
+                    slot.hasCreature = true;
+                }
+                //obj.SetActive(true);
             }
             else
             {
-                obj.SetActive(false);
+                //obj.SetActive(false);
             }
         }
     }
@@ -106,16 +112,22 @@ public class Board : NetworkBehaviour
     void OnBoardReady()
     {
         playableCardGameObjects = boardTracker.allLoadedGameObjects;
-        foreach (var field in battlefield.hostFields)
+        foreach (var field in battlefield.FieldsOfPlayer(localPlayer))
         {
-            field.owningPlayer = players.host;
-            Debug.Log(field.owningPlayer);
+            field.owningPlayer = localPlayer;
         }
-        foreach (var field in battlefield.guestFields)
-        {
-            field.owningPlayer = players.Other(players.host);
-            Debug.Log(field.owningPlayer);
-        }
+    }
+
+    void PlayCreature(Creature creature, int creatureSlot)
+    {
+        localPlayer.RequestPlayCreature(creature, creatureSlot);
+    }
+
+    public void CreaturePlayed(bool hostSide, int creatureSlot, string creatureIdentifier)
+    {
+        Debug.Log($"Creature played: {creatureIdentifier} on hostside: {hostSide} at slot: {creatureSlot}");
+        var field = hostSide ? battlefield.hostFields[creatureSlot] : battlefield.guestFields[creatureSlot];
+        field.creature = Instantiate(CardCatalogue.GetPrefabForCard(creatureIdentifier), field.transform);
     }
 
 }

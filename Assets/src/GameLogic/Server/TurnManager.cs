@@ -26,10 +26,14 @@ public class TurnManager : NetworkBehaviour
 
         currentPlayer = firstPlayer;
         currentPlayer.state = TurnState.PLAYING;
+        currentPlayer.maxMana = 1;
+        currentPlayer.mana = currentPlayer.maxMana;
         currentPlayer.RpcStartTurn(currentPlayer.netIdentity.connectionToClient);
 
         var otherPlayer = players.Other(currentPlayer);
         otherPlayer.state = TurnState.OPPONENT_TURN;
+        otherPlayer.maxMana = 0;
+        otherPlayer.mana = otherPlayer.maxMana;
         otherPlayer.RpcStartGameAsSecond(otherPlayer.netIdentity.connectionToClient);
 
     }
@@ -42,7 +46,10 @@ public class TurnManager : NetworkBehaviour
 
         var otherPlayer = players.Other(player);
         otherPlayer.state = TurnState.PLAYING;
+        otherPlayer.maxMana += 1;
+        otherPlayer.mana = otherPlayer.maxMana;
         otherPlayer.RpcStartTurn(otherPlayer.netIdentity.connectionToClient);
+        currentPlayer = otherPlayer;
     }
 
     public void ConfirmBlockers(NetworkGamePlayer player)

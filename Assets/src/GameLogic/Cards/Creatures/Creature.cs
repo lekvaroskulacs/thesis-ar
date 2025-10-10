@@ -1,7 +1,8 @@
-
+using UnityEngine;
 
 public class Creature : Card
 {
-    int attack;
-    int health;
+    public string creatureIdentifier;
+    [SerializeField] int attack;
+    [SerializeField] int health;
 }

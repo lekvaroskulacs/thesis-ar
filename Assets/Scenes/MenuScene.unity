@@ -3253,6 +3253,7 @@ MonoBehaviour:
   playerSpawnMethod: 0
   spawnPrefabs:
   - {fileID: 273027132225053818, guid: 9f32626c9b50d4c8394ec96b080ad856, type: 3}
+  - {fileID: 3996806575343633977, guid: 7cdf153edf1c889ef98dea420e3be479, type: 3}
   exceptionsDisconnect: 1
   snapshotSettings:
     bufferTimeMultiplier: 2
@@ -3271,6 +3272,7 @@ MonoBehaviour:
   gameScene: GameScene
   menuScene: MenuScene
   startingPlayer: 2
+  serverBoardPrefab: {fileID: 3996806575343633977, guid: 7cdf153edf1c889ef98dea420e3be479, type: 3}
   turnManager: {fileID: 0}
 --- !u!4 &1165464555
 Transform:

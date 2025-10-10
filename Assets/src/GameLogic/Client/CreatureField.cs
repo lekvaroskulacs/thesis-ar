@@ -7,6 +7,8 @@ using UnityEngine;
 public class CreatureField : MonoBehaviour
 {
     public NetworkGamePlayer owningPlayer;
+    public bool hasCreature = false;
+    public GameObject creature;
 
     [SerializeField] private SpriteRenderer field;
 

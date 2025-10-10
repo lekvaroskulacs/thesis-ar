@@ -1973,6 +1973,7 @@ GameObject:
   - component: {fileID: 400116}
   - component: {fileID: 14300000}
   - component: {fileID: 11100000}
+  - component: {fileID: -2196239463580869854}
   m_Layer: 0
   m_Name: GreenFairy
   m_TagString: Untagged
@@ -1990,8 +1991,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0.1040758, z: 0, w: -0.99456936}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.91620976, y: 0.9162095, z: 0.9162095}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 400114}
   - {fileID: 400112}
@@ -2047,3 +2048,19 @@ Animation:
   m_AnimatePhysics: 0
   m_UpdateMode: 0
   m_CullingType: 0
+--- !u!114 &-2196239463580869854
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100116}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 343338ad843e5565fb925b029d81097d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Creature
+  manaCost: 2
+  creatureIdentifier: Fairy
+  attack: 3
+  health: 4
