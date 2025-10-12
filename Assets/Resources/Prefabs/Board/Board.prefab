@@ -498,6 +498,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: CreatureField (7)
       objectReference: {fileID: 0}
+    - target: {fileID: 3657628262566322025, guid: 6d92b89aaba362e9fb64ef8361491b6f, type: 3}
+      propertyPath: finalRotation.x
+      value: -90
+      objectReference: {fileID: 0}
+    - target: {fileID: 3786174203228914976, guid: 6d92b89aaba362e9fb64ef8361491b6f, type: 3}
+      propertyPath: finalRotation.x
+      value: -90
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -924,6 +932,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: CreatureField (6)
       objectReference: {fileID: 0}
+    - target: {fileID: 3657628262566322025, guid: 6d92b89aaba362e9fb64ef8361491b6f, type: 3}
+      propertyPath: finalRotation.x
+      value: -90
+      objectReference: {fileID: 0}
+    - target: {fileID: 3786174203228914976, guid: 6d92b89aaba362e9fb64ef8361491b6f, type: 3}
+      propertyPath: finalRotation.x
+      value: -90
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1012,6 +1028,14 @@ PrefabInstance:
     - target: {fileID: 1404085332428217146, guid: 6d92b89aaba362e9fb64ef8361491b6f, type: 3}
       propertyPath: m_Name
       value: CreatureField (4)
+      objectReference: {fileID: 0}
+    - target: {fileID: 3657628262566322025, guid: 6d92b89aaba362e9fb64ef8361491b6f, type: 3}
+      propertyPath: finalRotation.x
+      value: -90
+      objectReference: {fileID: 0}
+    - target: {fileID: 3786174203228914976, guid: 6d92b89aaba362e9fb64ef8361491b6f, type: 3}
+      propertyPath: finalRotation.x
+      value: -90
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1252,6 +1276,14 @@ PrefabInstance:
     - target: {fileID: 1404085332428217146, guid: 6d92b89aaba362e9fb64ef8361491b6f, type: 3}
       propertyPath: m_Name
       value: CreatureField (5)
+      objectReference: {fileID: 0}
+    - target: {fileID: 3657628262566322025, guid: 6d92b89aaba362e9fb64ef8361491b6f, type: 3}
+      propertyPath: finalRotation.x
+      value: -90
+      objectReference: {fileID: 0}
+    - target: {fileID: 3786174203228914976, guid: 6d92b89aaba362e9fb64ef8361491b6f, type: 3}
+      propertyPath: finalRotation.x
+      value: -90
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

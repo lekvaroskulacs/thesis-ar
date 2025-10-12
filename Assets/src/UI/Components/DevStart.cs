@@ -30,11 +30,12 @@ public class DevStart : NetworkBehaviour
     public void GameStarted()
     {
         networkManager.StartHost();
-        Invoke("ChangeScene", 1.0f);
+        ChangeScene();
     }
 
     void ChangeScene()
     {
+        networkManager.devDebug = true;
         networkManager.ServerChangeScene("GameScene");
     }
 

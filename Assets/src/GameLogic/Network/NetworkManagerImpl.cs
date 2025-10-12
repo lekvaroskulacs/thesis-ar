@@ -29,12 +29,15 @@ public class NetworkManagerImpl : NetworkManager
     [Header("Configuration")]
     [SerializeField] private StartingPlayer startingPlayer;
     [SerializeField] private GameObject serverBoardPrefab;
+    [SerializeField] private GameObject networkBoardPrefab;
     public ServerBoard serverBoard { get; internal set; }
 
     private string currentScene;
     public NetworkPlayers<NetworkMenuPlayer> players = new NetworkPlayers<NetworkMenuPlayer>();
     public NetworkPlayers<NetworkGamePlayer> gamePlayers = new NetworkPlayers<NetworkGamePlayer>();
     public TurnManager turnManager;
+
+    public bool devDebug = false;
 
 
     public override void Awake()
@@ -62,6 +65,8 @@ public class NetworkManagerImpl : NetworkManager
         {
             var gamePlayer = playerInstance.GetComponent<NetworkGamePlayer>();
             gamePlayers.Add(gamePlayer);
+            GameObject networkBoardObj = Instantiate(networkBoardPrefab);
+            NetworkServer.Spawn(networkBoardObj, conn);
         }
         else
         {
@@ -144,7 +149,7 @@ public class NetworkManagerImpl : NetworkManager
         {
             bool arReady = ARSession.state == ARSessionState.SessionTracking;
             bool playersReady = gamePlayers.data.Count == 2;
-            return arReady && playersReady;
+            return arReady && (playersReady || devDebug);
         });
         ServerLoadGame();
     }

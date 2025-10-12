@@ -92,6 +92,46 @@ public class HUD : MonoBehaviour
 
             turnStateDisplay.text = text;
             manaDisplay.text = $"{player.mana}/{player.maxMana}";
+
+            if (player.board)
+            {
+                UpdateCreatureHUDs();
+            }
+        }
+    }
+
+    void UpdateCreatureHUDs()
+    {
+        var fields = player.board.GetCreatureFieldsForLocalPlayer();
+        foreach (var field in fields)
+        {
+            switch (player.state)
+            {
+                case TurnState.PLAYING:
+                    if (!field.creature)
+                    {
+                        break;
+                    }   
+                    field.toggleAttackButton.gameObject.SetActive(true);
+                    field.toggleAttackButton.enabled = field.creature.canAttack;
+                    field.toggleBlockButton.gameObject.SetActive(false);
+                    break;
+                case TurnState.BLOCKING:
+
+                    break;
+                case TurnState.OPPONENT_TURN:
+
+                    break;
+                case TurnState.OPPONENT_BLOCKING:
+
+                    break;
+                case TurnState.ATTACKING:
+
+                    break;
+                case TurnState.PLAYING_AFTER_ATTACK:
+
+                    break;
+            }
         }
     }
 

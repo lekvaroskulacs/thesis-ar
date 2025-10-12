@@ -135,7 +135,10 @@ public class MultipleImageTrackingManager : MonoBehaviour
         }
 
         var gameObject = nameToGameObject[trackedImage.referenceImage.name];
-        //gameObject.SetActive(true);
+        if (trackedImage.referenceImage.name == "Board")
+        {
+            gameObject.SetActive(true);
+        }
         gameObject.transform.position = trackedImage.transform.position;
         gameObject.transform.rotation = trackedImage.transform.rotation;
     }

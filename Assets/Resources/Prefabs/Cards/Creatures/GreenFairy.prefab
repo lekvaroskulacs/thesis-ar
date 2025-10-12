@@ -1973,7 +1973,8 @@ GameObject:
   - component: {fileID: 400116}
   - component: {fileID: 14300000}
   - component: {fileID: 11100000}
-  - component: {fileID: -2196239463580869854}
+  - component: {fileID: 8345901680338033588}
+  - component: {fileID: 1228160783385402147}
   m_Layer: 0
   m_Name: GreenFairy
   m_TagString: Untagged
@@ -1991,7 +1992,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0.1040758, z: 0, w: -0.99456936}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.25, y: 0.25, z: 0.25}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 400114}
@@ -2048,7 +2049,7 @@ Animation:
   m_AnimatePhysics: 0
   m_UpdateMode: 0
   m_CullingType: 0
---- !u!114 &-2196239463580869854
+--- !u!114 &8345901680338033588
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2057,10 +2058,30 @@ MonoBehaviour:
   m_GameObject: {fileID: 100116}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 343338ad843e5565fb925b029d81097d, type: 3}
+  m_Script: {fileID: 11500000, guid: 1bc56f4dab5a08e30bfe042dedc00074, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Creature
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
   manaCost: 2
   creatureIdentifier: Fairy
-  attack: 3
-  health: 4
+  _attack: 2
+  _maxHealth: 2
+--- !u!114 &1228160783385402147
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100116}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
+  sceneId: 0
+  _assetId: 1523542839
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0

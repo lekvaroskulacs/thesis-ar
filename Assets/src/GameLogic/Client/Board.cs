@@ -45,17 +45,26 @@ public class Board : NetworkBehaviour
         boardReady += callback;
     }
 
+    public List<CreatureField> GetCreatureFieldsForLocalPlayer()
+    {
+        return battlefield.FieldsOfPlayer(localPlayer);
+    }
+
     void Start()
     {
         boardTracker = GameObject.FindWithTag("BoardTracker").GetComponent<BoardTracker>();
         boardTracker.board = this;
-        networkManager.spawnPrefabs.AddRange(playableCardGameObjects);
+        foreach (var gameobj in boardTracker.allLoadedGameObjects)
+        {
+            var prefab = CardCatalogue.GetPrefabForCard(gameobj.GetComponent<Creature>().creatureIdentifier);
+            NetworkClient.RegisterPrefab(prefab);
+            playableCardGameObjects.Add(prefab);
+        }
+
         var players = GameObject.FindGameObjectsWithTag("NetworkGamePlayer");
         var player = players.Single(player => player.GetComponent<NetworkGamePlayer>().isLocalPlayer);
         localPlayer = player.GetComponent<NetworkGamePlayer>();
         localPlayer.board = this;
-        Debug.Log(localPlayer);
-        Debug.Log(localPlayer.board);
     }
 
     void Update()
@@ -95,12 +104,14 @@ public class Board : NetworkBehaviour
 
             if (slot)
             {
-                if (!slot.hasCreature)
+                if (!slot.creature)
                 {
                     PlayCreature(obj.GetComponent<Creature>(), battlefield.FieldsOfPlayer(localPlayer).IndexOf(slot));
-                    slot.hasCreature = true;
                 }
-                //obj.SetActive(true);
+                else
+                {
+                    Debug.Log($"Creature already exists on slot {slot}");
+                }
             }
             else
             {
@@ -123,11 +134,27 @@ public class Board : NetworkBehaviour
         localPlayer.RequestPlayCreature(creature, creatureSlot);
     }
 
-    public void CreaturePlayed(bool hostSide, int creatureSlot, string creatureIdentifier)
+    public void CreaturePlayed(bool hostSide, int creatureSlot, Creature creature)
     {
-        Debug.Log($"Creature played: {creatureIdentifier} on hostside: {hostSide} at slot: {creatureSlot}");
+        Debug.Log($"Creature played: {creature} on hostside: {hostSide} at slot: {creatureSlot}");
         var field = hostSide ? battlefield.hostFields[creatureSlot] : battlefield.guestFields[creatureSlot];
-        field.creature = Instantiate(CardCatalogue.GetPrefabForCard(creatureIdentifier), field.transform);
+        field.creature = creature;
+        creature.transform.position = field.transform.position;
+        creature.transform.rotation = field.transform.rotation;
+        creature.transform.parent = field.transform;
+        creature.owningPlayer = localPlayer;
+    }
+
+
+    public void NewTurn()
+    {
+        foreach (var field in battlefield.FieldsOfPlayer(localPlayer))
+        {
+            if (field.creature)
+            {
+                field.creature.RequestBeginTurn();
+            }
+        }
     }
 
 }

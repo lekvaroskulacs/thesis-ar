@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using Mirror;
+using NUnit.Framework;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -8,6 +10,7 @@ public class NetworkGamePlayer : NetworkBehaviour
     [SyncVar] public TurnState state;
     [SyncVar] public int mana;
     [SyncVar] public int maxMana;
+    [SyncVar] public HashSet<Creature> attackingCreatures = new HashSet<Creature>();
     public Board board;
     NetworkManagerImpl _networkManager;
     NetworkManagerImpl networkManager
@@ -33,11 +36,29 @@ public class NetworkGamePlayer : NetworkBehaviour
         hud.RegisterNetworkPlayer(this);
     }
 
+    void Update()
+    {
+        if (state == TurnState.PLAYING && attackingCreatures.Count > 0)
+        {
+            state = TurnState.ATTACKING;
+        }
+
+        if (state == TurnState.ATTACKING && attackingCreatures.Count == 0)
+        {
+            state = TurnState.PLAYING;
+        }
+    }
+
     [TargetRpc]
     public void RpcStartTurn(NetworkConnectionToClient target)
     {
         Debug.Log($"StartTurn on {name}, state: {state}");
         //state = TurnState.PLAYING;
+        if (!board)
+        {
+            return;
+        }
+        board.NewTurn();
     }
 
     [TargetRpc]
@@ -55,20 +76,21 @@ public class NetworkGamePlayer : NetworkBehaviour
     }
 
     [TargetRpc]
-    public void RpcCreaturePlayed(bool hostSide, int creatureSlot, string creatureIdentifier)
+    public void RpcCreaturePlayed(bool hostSide, int creatureSlot, uint netId)
     {
         if (!board)
         {
             throw new NullReferenceException("Client local player board reference is null!");
         }
-        board.CreaturePlayed(hostSide, creatureSlot, creatureIdentifier);
+        var creatureObj = NetworkClient.spawned[netId].gameObject;
+        var creature = creatureObj.GetComponent<Creature>();    
+        board.CreaturePlayed(hostSide, creatureSlot, creature);
     }
 
-    public void test(bool hostSide, int creatureSlot, string creatureIdentifier)
+    [TargetRpc]
+    public void RpcCreatureDestroyed(bool hostSide, int creatureSlot)
     {
-        Debug.Log(board);
-        //GameObject.FindWithTag("Logger").GetComponent<UIManager>().DisplayError(board == null ? board.name : "null");
-        if (board) board.CreaturePlayed(hostSide, creatureSlot, creatureIdentifier);
+
     }
 
     public void RequestEndTurn()

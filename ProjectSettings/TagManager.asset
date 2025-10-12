@@ -13,6 +13,7 @@ TagManager:
   - NetworkGamePlayer
   - TurnManager
   - GamePlayer
+  - HUD
   layers:
   - Default
   - TransparentFX

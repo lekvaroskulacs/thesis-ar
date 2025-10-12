@@ -1,7 +1,8 @@
 
-using UnityEngine;
 
-public class Card : MonoBehaviour
+using Mirror;
+
+public class Card : NetworkBehaviour
 {
     public int manaCost;
 }

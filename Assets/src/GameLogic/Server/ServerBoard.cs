@@ -16,21 +16,45 @@ public class ServerBoard : NetworkBehaviour
         { "Beholder", "Prefabs/Cards/Creatures/Beholder"}
         // Add more here as needed
     };
+    
+    private NetworkManagerImpl _networkManager;
+    private NetworkManagerImpl networkManager
+    {
+        get
+        {
+            if (_networkManager != null)
+            {
+                return _networkManager;
+            }
+            return _networkManager = NetworkManager.singleton as NetworkManagerImpl;
+        }
+    }
+
 
     public void CreaturePlayed(NetworkGamePlayer player, int creatureSlot, string creatureIdentifier)
     {
         var creature = Instantiate(Resources.Load<GameObject>(catalogue[creatureIdentifier]));
-        battlefield.FieldsOfPlayer(player)[creatureSlot].creature = creature.GetComponent<Creature>();
+        NetworkServer.Spawn(creature, player.netIdentity.connectionToClient);
+        var c = creature.GetComponent<Creature>();
+        c.owningPlayer = player;
+        battlefield.FieldsOfPlayer(player)[creatureSlot].creature = c;
 
         foreach (var p in players.data)
         {
-            p.RpcCreaturePlayed(player.isServer, creatureSlot, creatureIdentifier);
+            p.RpcCreaturePlayed(player.isServer, creatureSlot, creature.GetComponent<NetworkIdentity>().netId);
         }
     }
 
-    public void CreatureRemoved(NetworkGamePlayer player, int creatureSlot)
+    public void CreatureDestroyed(NetworkGamePlayer player, int creatureSlot)
     {
+        var creature = battlefield.FieldsOfPlayer(player)[creatureSlot].creature;
+        Destroy(creature.gameObject);
+        battlefield.FieldsOfPlayer(player)[creatureSlot].creature = null;
 
+        foreach (var p in players.data)
+        {
+            p.RpcCreatureDestroyed(player.isServer, creatureSlot);
+        }
     }
 
     public Creature CreatureAtSlot(NetworkGamePlayer player, int creatureSlot)

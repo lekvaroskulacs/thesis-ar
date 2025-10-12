@@ -107,7 +107,8 @@ GameObject:
   m_Component:
   - component: {fileID: 178560101459360467}
   - component: {fileID: 6096312193273766057}
-  - component: {fileID: 750669602257274720}
+  - component: {fileID: 6178028556317772013}
+  - component: {fileID: 1004232260063350180}
   m_Layer: 0
   m_Name: Cactus
   m_TagString: Untagged
@@ -125,7 +126,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.25, y: 0.25, z: 0.25}
   m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 5099805917346535782}
@@ -154,7 +155,7 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &750669602257274720
+--- !u!114 &6178028556317772013
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -163,13 +164,33 @@ MonoBehaviour:
   m_GameObject: {fileID: 662468794185850985}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 343338ad843e5565fb925b029d81097d, type: 3}
+  m_Script: {fileID: 11500000, guid: 1bc56f4dab5a08e30bfe042dedc00074, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Creature
+  syncDirection: 0
+  syncMode: 0
+  syncInterval: 0
   manaCost: 1
   creatureIdentifier: Cactus
-  attack: 1
-  health: 1
+  _attack: 1
+  _maxHealth: 1
+--- !u!114 &1004232260063350180
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 662468794185850985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Mirror::Mirror.NetworkIdentity
+  sceneId: 0
+  _assetId: 331079802
+  serverOnly: 0
+  visibility: 0
+  hasSpawned: 0
 --- !u!1 &1006438018938304421
 GameObject:
   m_ObjectHideFlags: 0
