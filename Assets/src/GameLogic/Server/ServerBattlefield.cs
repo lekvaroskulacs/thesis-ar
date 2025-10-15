@@ -31,7 +31,7 @@ public class ServerBattlefield : MonoBehaviour
             return list;
         }
     }
-    
+
     public List<ServerCreatureField> FieldsOfPlayer(NetworkGamePlayer player)
     {
         if (!player.isServer)
@@ -42,6 +42,16 @@ public class ServerBattlefield : MonoBehaviour
         {
             return hostFields;
         }
+    }
+    
+    public List<Creature> CreaturesOfPlayer(NetworkGamePlayer player)
+    {
+        var playerCreatures = new List<Creature>();
+        foreach (var field in FieldsOfPlayer(player))
+        {
+            playerCreatures.Add(field.creature);
+        }
+        return playerCreatures;
     }
 
 

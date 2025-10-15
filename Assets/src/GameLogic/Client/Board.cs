@@ -39,6 +39,8 @@ public class Board : NetworkBehaviour
         }
     }
 
+    private List<Creature> currentAttackers = new List<Creature>();
+
 
     public void SubscribeToBoardReady(Action callback)
     {
@@ -113,10 +115,6 @@ public class Board : NetworkBehaviour
                     Debug.Log($"Creature already exists on slot {slot}");
                 }
             }
-            else
-            {
-                //obj.SetActive(false);
-            }
         }
     }
 
@@ -154,6 +152,22 @@ public class Board : NetworkBehaviour
             {
                 field.creature.RequestBeginTurn();
             }
+        }
+    }
+
+    public void AttackCommenced(bool hostSide, List<uint> attackerIds)
+    {
+        foreach (var id in attackerIds)
+        {
+            var gameObject = NetworkClient.spawned[id].gameObject;
+            var creature = gameObject.GetComponent<Creature>();
+            if (!creature)
+            {
+                throw new ArgumentException("Received attacker IDs contain non-creature object!");
+            }
+
+            currentAttackers.Add(creature);
+            creature.RequestConfirmAttack();
         }
     }
 

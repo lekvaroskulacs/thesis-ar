@@ -19,6 +19,7 @@ public class CreatureField : MonoBehaviour
     [SerializeField] public OrderableText creatureAttackDisplay;
     [SerializeField] public Button toggleAttackButton;
     [SerializeField] public Button toggleBlockButton;
+    [SerializeField] public GameObject attackIcon;
 
     public bool IsGameObjectOnCreatureField(GameObject obj)
     {
@@ -57,6 +58,15 @@ public class CreatureField : MonoBehaviour
             else
             {
                 toggleAttackButton.GetComponentInChildren<TMP_Text>().text = "Attack";
+            }
+
+            if (creature.attackConfirmed)
+            {
+                attackIcon.SetActive(true);
+            }
+            else
+            {
+                attackIcon.SetActive(false);
             }
         }
     }

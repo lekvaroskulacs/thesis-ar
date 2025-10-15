@@ -59,6 +59,9 @@ public class TurnManager : NetworkBehaviour
 
     public void ConfirmAttackers(NetworkGamePlayer player)
     {
+        player.state = TurnState.OPPONENT_BLOCKING;
 
+        var otherPlayer = players.Other(player);
+        otherPlayer.state = TurnState.BLOCKING;
     }
 }

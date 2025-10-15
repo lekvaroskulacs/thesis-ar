@@ -40,12 +40,12 @@ public class NetworkGamePlayer : NetworkBehaviour
     {
         if (state == TurnState.PLAYING && attackingCreatures.Count > 0)
         {
-            state = TurnState.ATTACKING;
+            CmdChangeState(TurnState.ATTACKING);
         }
 
         if (state == TurnState.ATTACKING && attackingCreatures.Count == 0)
         {
-            state = TurnState.PLAYING;
+            CmdChangeState(TurnState.PLAYING);
         }
     }
 
@@ -93,6 +93,16 @@ public class NetworkGamePlayer : NetworkBehaviour
 
     }
 
+    [TargetRpc]
+    public void RpcAttackCommenced(bool hostSide, List<uint> netIds)
+    {
+        if (!board)
+        {
+            throw new NullReferenceException("Client local player board reference is null!");
+        }
+        board.AttackCommenced(hostSide, netIds);
+    }
+
     public void RequestEndTurn()
     {
         if (state != TurnState.PLAYING && state != TurnState.PLAYING_AFTER_ATTACK)
@@ -110,10 +120,26 @@ public class NetworkGamePlayer : NetworkBehaviour
             Debug.Log("Not enough mana!");
             return;
         }
-        // TODO>check if this is called
         CmdPlayCreature(creature.creatureIdentifier, creature.manaCost, creatureSlot);
     }
 
+    public void RequestAttack()
+    {
+        List<uint> attackers = new List<uint>();
+        foreach (var creature in attackingCreatures)
+        {
+            attackers.Add(creature.netId);
+        }
+        CmdCommenceAttack(attackers);
+    }
+
+    [Command]
+    public void CmdChangeState(TurnState state)
+    {
+        // It would be great to have some validation e.g. you can only go to ATTACK from PLAYING
+        this.state = state;
+    }
+    
     [Command]
     public void CmdEndTurn()
     {
@@ -131,17 +157,18 @@ public class NetworkGamePlayer : NetworkBehaviour
         networkManager.serverBoard.CreaturePlayed(this, creatureSlot, creatureIdentifier);
     }
 
-/*
-    [Command]
-    public void CmdToggleAttacking(Creature creature)
-    {
+    /*
+        [Command]
+        public void CmdToggleAttacking(Creature creature)
+        {
 
-    }
-*/
+        }
+    */
     [Command]
-    public void CmdCommenceAttack()
+    public void CmdCommenceAttack(List<uint> creatureNetIds)
     {
-
+        networkManager.serverBoard.AttackByPlayer(this, creatureNetIds);
+        networkManager.turnManager.ConfirmAttackers(this);
     }
 /*
     [Command]

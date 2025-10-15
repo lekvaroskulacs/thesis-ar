@@ -61,6 +61,7 @@ public class HUD : MonoBehaviour
                     endTurnButton.enabled = false;
                     confirmBlockersButton.gameObject.SetActive(true);
                     commenceAttackButton.gameObject.SetActive(false);
+                    confirmBlockersButton.enabled = true;
                     text = "Blocking";
                     break;
                 case TurnState.OPPONENT_TURN:
@@ -142,7 +143,7 @@ public class HUD : MonoBehaviour
 
     void OnCommenceAttack()
     {
-        
+        player.RequestAttack();
     }
 
     void OnConfirmBlockers()

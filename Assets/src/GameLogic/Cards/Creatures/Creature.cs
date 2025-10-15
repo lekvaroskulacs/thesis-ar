@@ -1,7 +1,5 @@
 using System;
 using Mirror;
-using Mirror.Examples.Basic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class Creature : Card
@@ -13,6 +11,8 @@ public class Creature : Card
     [SyncVar] private int _health;
     [SyncVar(hook = nameof(HookAttackToggled))] private bool _attacking = false;
     [SyncVar] private bool _blocking = false;
+    [SyncVar] private bool _attackConfirmed = false;
+    [SyncVar] private bool _blockConfirmed = false;
 
     public int attack
     {
@@ -42,6 +42,18 @@ public class Creature : Card
     {
         get { return _blocking; }
         internal set { _blocking = value; }
+    }
+
+    public bool attackConfirmed
+    {
+        get { return _attackConfirmed; }
+        internal set { _attackConfirmed = value; }
+    }
+
+    public bool blockConfirmed
+    {
+        get { return _blockConfirmed; }
+        internal set { _blockConfirmed = value; }
     }
 
     public bool canAttack { get; internal set; } = false;
@@ -82,22 +94,27 @@ public class Creature : Card
         blocking = !blocking;
     }
 
-    public virtual void OnPlayed()
+    [Command]
+    public virtual void CmdConfirmAttack()
     {
-
+        attackConfirmed = true;
     }
 
-    public virtual void OnDestroyed()
+    [Command]
+    public virtual void CmdConfirmBlock()
     {
-
+        blockConfirmed = true;
     }
 
-
-    public override void OnStartClient()
+    [Command]
+    public virtual void CmdResetCombatState()
     {
-
+        attacking = false;
+        blocking = false;
+        attackConfirmed = false;
+        blockConfirmed = false;
     }
-
+    
     public virtual void RequestBeginTurn()
     {
         CmdToggleCanAttack(true);
@@ -123,5 +140,20 @@ public class Creature : Card
     public virtual void RequestToggleBlock()
     {
         CmdToggleBlock();
+    }
+
+    public virtual void RequestConfirmAttack()
+    {
+        CmdConfirmAttack();
+    }
+
+    public virtual void RequestConfirmBlock()
+    {
+        CmdConfirmBlock();
+    }
+
+    public virtual void RequestResetCombatState()
+    {
+        CmdResetCombatState();
     }
 }
