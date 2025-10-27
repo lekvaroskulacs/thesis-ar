@@ -60,13 +60,18 @@ public class NetworkManagerImpl : NetworkManager
         GameObject playerInstance = Instantiate(prefab);
         playerInstance.name = $"{prefab.name} [connId={conn.connectionId}]";
         NetworkServer.AddPlayerForConnection(conn, playerInstance);
-
         if (currentScene == gameScene)
         {
             var gamePlayer = playerInstance.GetComponent<NetworkGamePlayer>();
             gamePlayers.Add(gamePlayer);
             GameObject networkBoardObj = Instantiate(networkBoardPrefab);
             NetworkServer.Spawn(networkBoardObj, conn);
+            /*
+            if (gamePlayers.host == gamePlayer)
+            {
+                gamePlayer.isHost = true;
+            }
+            */
         }
         else
         {
@@ -101,6 +106,7 @@ public class NetworkManagerImpl : NetworkManager
     // TODO: Somehow we should handle the client trying to reconnect and maybe verifying if its the same one
     void GameDisconnected(NetworkConnectionToClient conn)
     {
+        ReplayLogger.SaveToFile("game.replay");
         var playerInstance = conn.identity.GetComponent<NetworkGamePlayer>();
 
         NetworkServer.DestroyPlayerForConnection(conn);
@@ -252,4 +258,5 @@ public class NetworkManagerImpl : NetworkManager
     }
 
     #endregion
+
 }

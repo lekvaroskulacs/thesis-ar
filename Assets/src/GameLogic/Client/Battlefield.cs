@@ -34,7 +34,7 @@ public class Battlefield : MonoBehaviour
 
     public List<CreatureField> FieldsOfPlayer(NetworkGamePlayer player)
     {
-        if (!player.isServer)
+        if (!player.isHost)
         {
             return guestFields;
         }

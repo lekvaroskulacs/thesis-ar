@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem.Interactions;
 
 public class ServerBattlefield : MonoBehaviour
 {
@@ -34,7 +35,7 @@ public class ServerBattlefield : MonoBehaviour
 
     public List<ServerCreatureField> FieldsOfPlayer(NetworkGamePlayer player)
     {
-        if (!player.isServer)
+        if (!player.isHost)
         {
             return guestFields;
         }
@@ -43,7 +44,7 @@ public class ServerBattlefield : MonoBehaviour
             return hostFields;
         }
     }
-    
+
     public List<Creature> CreaturesOfPlayer(NetworkGamePlayer player)
     {
         var playerCreatures = new List<Creature>();
@@ -54,5 +55,36 @@ public class ServerBattlefield : MonoBehaviour
         return playerCreatures;
     }
 
+    public Creature GetOpposingCreature(Creature creature)
+    {
+        int slot = -1;
+        bool hostSide = false;
+        foreach (var field in hostFields)
+        {
+            if (field.creature == creature)
+            {
+                slot = hostFields.IndexOf(field);
+                hostSide = true;
+            }
+        }
+        foreach (var field in guestFields)
+        {
+            if (field.creature == creature)
+            {
+                slot = guestFields.IndexOf(field);
+                hostSide = false;
+            }
+        }
+
+        int numSlots = 3;
+        if (hostSide)
+        {
+            return guestFields[numSlots - slot].creature;
+        }
+        else
+        {
+            return hostFields[numSlots - slot].creature;
+        }
+    }
 
 }

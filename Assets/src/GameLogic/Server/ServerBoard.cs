@@ -2,6 +2,7 @@ using UnityEngine;
 using Mirror;
 using System;
 using System.Collections.Generic;
+using Mirror.BouncyCastle.Crypto.Modes;
 
 
 public class ServerBoard : NetworkBehaviour
@@ -19,6 +20,7 @@ public class ServerBoard : NetworkBehaviour
     };
 
     private List<Creature> currentAttackers = new List<Creature>();
+    private List<Creature> currentBlockers = new List<Creature>();
     
     private NetworkManagerImpl _networkManager;
     private NetworkManagerImpl networkManager
@@ -44,19 +46,23 @@ public class ServerBoard : NetworkBehaviour
 
         foreach (var p in players.data)
         {
-            p.RpcCreaturePlayed(player.isServer, creatureSlot, creature.GetComponent<NetworkIdentity>().netId);
+            p.RpcCreaturePlayed(player.isHost, creatureSlot, creature.GetComponent<NetworkIdentity>().netId);
         }
     }
 
-    public void CreatureDestroyed(NetworkGamePlayer player, int creatureSlot)
+    public void CreatureDestroyed(NetworkGamePlayer player, Creature creature)
     {
-        var creature = battlefield.FieldsOfPlayer(player)[creatureSlot].creature;
-        Destroy(creature.gameObject);
-        battlefield.FieldsOfPlayer(player)[creatureSlot].creature = null;
-
-        foreach (var p in players.data)
+        var fields = player.isHost ? battlefield.hostFields : battlefield.guestFields;
+        foreach (var field in fields)
         {
-            p.RpcCreatureDestroyed(player.isServer, creatureSlot);
+            if (field.creature == creature)
+            {
+                field.creature = null;
+                foreach (var p in players.data)
+                {
+                    p.RpcCreatureDestroyed(player.isHost, fields.IndexOf(field));
+                }
+            }
         }
     }
 
@@ -83,10 +89,68 @@ public class ServerBoard : NetworkBehaviour
 
             currentAttackers.Add(creature);
         }
-        
+
         foreach (var p in players.data)
         {
-            p.RpcAttackCommenced(player.isServer, attackerIds);
+            p.RpcAttackCommenced(player.isHost, attackerIds);
         }
     }
+
+    public void BlockByPlayer(NetworkGamePlayer player, List<uint> blockerIds)
+    {
+        var playerCreatures = battlefield.CreaturesOfPlayer(player);
+        foreach (var id in blockerIds)
+        {
+            var gameObject = NetworkServer.spawned[id].gameObject;
+            var creature = gameObject.GetComponent<Creature>();
+            if (!creature)
+            {
+                throw new ArgumentException("Received blcoker IDs contain non-creature object!");
+            }
+            if (!playerCreatures.Contains(creature))
+            {
+                throw new ArgumentException("Blocking creature is not owned by blocking player!");
+            }
+
+            currentBlockers.Add(creature);
+        }
+
+        foreach (var p in players.data)
+        {
+            p.RpcBlockConfirmed(player.isHost, blockerIds);
+        }
+    }
+
+    public void ResolveCombat(NetworkGamePlayer blockingPlayer)
+    {
+        foreach (var attacker in currentAttackers)
+        {
+            if (!attacker.attackConfirmed)
+            {
+                throw new Exception($"Something went wrong. Attacker is not confirmed to attack: {attacker}");
+            }
+
+            var blocker = battlefield.GetOpposingCreature(attacker);
+            if (blocker)
+            {
+                blocker.TakeDamage(attacker.attack);
+                attacker.TakeDamage(blocker.attack);
+            }
+            else
+            {
+                blockingPlayer.TakeDamage(attacker.attack);
+            }
+        }
+        currentAttackers.Clear();
+        currentBlockers.Clear();
+        foreach (var field in battlefield.allFields)
+        {
+            if (field.creature)
+            {
+                field.creature.ResetCombatState();
+            }
+        }
+    }
+    
+    
 }

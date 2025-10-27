@@ -4,6 +4,7 @@ using TMPro;
 using UnityEngine.UI;
 using Unity.VisualScripting;
 using UnityEngine;
+using System;
 
 
 public class CreatureField : MonoBehaviour
@@ -20,6 +21,7 @@ public class CreatureField : MonoBehaviour
     [SerializeField] public Button toggleAttackButton;
     [SerializeField] public Button toggleBlockButton;
     [SerializeField] public GameObject attackIcon;
+    [SerializeField] public GameObject blockIcon;
 
     public bool IsGameObjectOnCreatureField(GameObject obj)
     {
@@ -60,6 +62,15 @@ public class CreatureField : MonoBehaviour
                 toggleAttackButton.GetComponentInChildren<TMP_Text>().text = "Attack";
             }
 
+            if (creature.blocking)
+            {
+                toggleBlockButton.GetComponentInChildren<TMP_Text>().text = "X";
+            }
+            else
+            {
+                toggleBlockButton.GetComponentInChildren<TMP_Text>().text = "Block";
+            }
+
             if (creature.attackConfirmed)
             {
                 attackIcon.SetActive(true);
@@ -68,6 +79,12 @@ public class CreatureField : MonoBehaviour
             {
                 attackIcon.SetActive(false);
             }
+        }
+        else
+        {
+            attackIcon.SetActive(false);
+            creatureAttackDisplay.gameObject.SetActive(false);
+            creatureHealthDisplay.gameObject.SetActive(false);
         }
     }
 

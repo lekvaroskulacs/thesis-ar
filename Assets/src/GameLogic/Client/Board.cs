@@ -140,9 +140,18 @@ public class Board : NetworkBehaviour
         creature.transform.position = field.transform.position;
         creature.transform.rotation = field.transform.rotation;
         creature.transform.parent = field.transform;
-        creature.owningPlayer = localPlayer;
+
+        if (battlefield.FieldsOfPlayer(localPlayer).Contains(field))
+        {
+            creature.owningPlayer = localPlayer;
+        }
     }
 
+    public void CreatureDestroyed(bool hostSide, int creatureSlot)
+    {
+        var field = hostSide ? battlefield.hostFields[creatureSlot] : battlefield.guestFields[creatureSlot];
+        field.creature = null;
+    }
 
     public void NewTurn()
     {
@@ -170,5 +179,28 @@ public class Board : NetworkBehaviour
             creature.RequestConfirmAttack();
         }
     }
+
+    public void BlockConfirmed(bool hostSide, List<uint> blockerIds)
+    {
+        foreach (var id in blockerIds)
+        {
+            var gameObject = NetworkClient.spawned[id].gameObject;
+            var creature = gameObject.GetComponent<Creature>();
+            if (!creature)
+            {
+                throw new ArgumentException("Received blocker IDs contain non-creature object!");
+            }
+
+            currentAttackers.Add(creature);
+            creature.RequestConfirmBlock();
+        }
+
+        if (localPlayer.isHost == hostSide)
+        {
+            localPlayer.CmdResolveCombat();        
+        }
+    }
+
+    
 
 }

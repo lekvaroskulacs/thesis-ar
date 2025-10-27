@@ -87,7 +87,7 @@ public class HUD : MonoBehaviour
                     endTurnButton.enabled = true;
                     confirmBlockersButton.gameObject.SetActive(false);
                     commenceAttackButton.gameObject.SetActive(false);
-                    text = "Attacking";
+                    text = "Playing (After attack)";
                     break;
             }
 
@@ -118,7 +118,13 @@ public class HUD : MonoBehaviour
                     field.toggleBlockButton.gameObject.SetActive(false);
                     break;
                 case TurnState.BLOCKING:
-
+                    if (!field.creature)
+                    {
+                        break;
+                    }
+                    field.toggleBlockButton.gameObject.SetActive(true);
+                    field.toggleAttackButton.enabled = true;
+                    field.toggleAttackButton.gameObject.SetActive(false);
                     break;
                 case TurnState.OPPONENT_TURN:
 
@@ -130,7 +136,12 @@ public class HUD : MonoBehaviour
 
                     break;
                 case TurnState.PLAYING_AFTER_ATTACK:
-
+                    if (!field.creature)
+                    {
+                        break;
+                    }
+                    field.toggleBlockButton.gameObject.SetActive(false);
+                    field.toggleAttackButton.gameObject.SetActive(false);
                     break;
             }
         }
@@ -148,7 +159,7 @@ public class HUD : MonoBehaviour
 
     void OnConfirmBlockers()
     {
-        
+        player.RequestBlock();
     }
 
 

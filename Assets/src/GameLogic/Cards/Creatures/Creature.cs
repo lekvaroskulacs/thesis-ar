@@ -10,9 +10,10 @@ public class Creature : Card
     [SyncVar][SerializeField] private int _maxHealth;
     [SyncVar] private int _health;
     [SyncVar(hook = nameof(HookAttackToggled))] private bool _attacking = false;
-    [SyncVar] private bool _blocking = false;
+    [SyncVar(hook = nameof(HookBlockToggled))] private bool _blocking = false;
     [SyncVar] private bool _attackConfirmed = false;
     [SyncVar] private bool _blockConfirmed = false;
+    [SyncVar] private bool _canAttack = false;
 
     public int attack
     {
@@ -56,22 +57,47 @@ public class Creature : Card
         internal set { _blockConfirmed = value; }
     }
 
-    public bool canAttack { get; internal set; } = false;
+    public bool canAttack
+    {
+        get { return _canAttack; }
+        internal set { _canAttack = value; }
+    }
+
+    private NetworkManagerImpl _networkManager;
+    private NetworkManagerImpl networkManager
+    {
+        get
+        {
+            if (_networkManager != null)
+            {
+                return _networkManager;
+            }
+            return _networkManager = NetworkManager.singleton as NetworkManagerImpl;
+        }
+    }
 
     void Awake()
     {
         health = maxHealth;
     }
 
-    [Command]
-    public virtual void CmdTakeDamage(int damage)
+    public virtual void TakeDamage(int damage)
     {
         health -= damage;
-        // Die()
+        if (health <= 0)
+        {
+            Die();
+        }
     }
 
-    [Command]
-    public virtual void CmdHeal(int healing)
+    public virtual void Die()
+    {
+        networkManager.serverBoard.CreatureDestroyed(owningPlayer, this);
+        NetworkServer.Destroy(gameObject);
+    }
+    
+
+    public virtual void Heal(int healing)
     {
         health = Math.Min(maxHealth, health + healing);
     }
@@ -109,6 +135,11 @@ public class Creature : Card
     [Command]
     public virtual void CmdResetCombatState()
     {
+        ResetCombatState();
+    }
+
+    public virtual void ResetCombatState()
+    {
         attacking = false;
         blocking = false;
         attackConfirmed = false;
@@ -140,6 +171,18 @@ public class Creature : Card
     public virtual void RequestToggleBlock()
     {
         CmdToggleBlock();
+    }
+
+    public virtual void HookBlockToggled(bool oldValue, bool newValue)
+    {
+        if (blocking)
+        {
+            owningPlayer.blockingCreatures.Add(this);
+        }
+        else
+        {
+            owningPlayer.blockingCreatures.Remove(this);
+        }
     }
 
     public virtual void RequestConfirmAttack()

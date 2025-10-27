@@ -10,7 +10,8 @@ public enum TurnState
     OPPONENT_BLOCKING,
     BLOCKING,
     ATTACKING,
-    PLAYING_AFTER_ATTACK
+    PLAYING_AFTER_ATTACK,
+    COMBAT_ANIMATIONS
 }
 
 public class TurnManager : NetworkBehaviour
@@ -54,7 +55,10 @@ public class TurnManager : NetworkBehaviour
 
     public void ConfirmBlockers(NetworkGamePlayer player)
     {
+        player.state = TurnState.OPPONENT_TURN;
 
+        var otherPlayer = players.Other(player);
+        otherPlayer.state = TurnState.PLAYING_AFTER_ATTACK;
     }
 
     public void ConfirmAttackers(NetworkGamePlayer player)

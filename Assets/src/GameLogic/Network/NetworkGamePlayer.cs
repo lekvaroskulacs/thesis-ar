@@ -10,7 +10,10 @@ public class NetworkGamePlayer : NetworkBehaviour
     [SyncVar] public TurnState state;
     [SyncVar] public int mana;
     [SyncVar] public int maxMana;
+    [SyncVar] public int playerHealth = 20;
+    [SyncVar] public bool isHost;
     [SyncVar] public HashSet<Creature> attackingCreatures = new HashSet<Creature>();
+    [SyncVar] public HashSet<Creature> blockingCreatures = new HashSet<Creature>();
     public Board board;
     NetworkManagerImpl _networkManager;
     NetworkManagerImpl networkManager
@@ -34,6 +37,7 @@ public class NetworkGamePlayer : NetworkBehaviour
             throw new Exception("HUD doesn't exist for this player");
         }
         hud.RegisterNetworkPlayer(this);
+        isHost = NetworkServer.connections.Count > 0;
     }
 
     void Update()
@@ -47,6 +51,12 @@ public class NetworkGamePlayer : NetworkBehaviour
         {
             CmdChangeState(TurnState.PLAYING);
         }
+    }
+
+    public void TakeDamage(int damage)
+    {
+        playerHealth -= damage;
+        //die
     }
 
     [TargetRpc]
@@ -90,7 +100,11 @@ public class NetworkGamePlayer : NetworkBehaviour
     [TargetRpc]
     public void RpcCreatureDestroyed(bool hostSide, int creatureSlot)
     {
-
+        if (!board)
+        {
+            throw new NullReferenceException("Client local player board reference is null!");
+        }
+        board.CreatureDestroyed(hostSide, creatureSlot);
     }
 
     [TargetRpc]
@@ -101,6 +115,16 @@ public class NetworkGamePlayer : NetworkBehaviour
             throw new NullReferenceException("Client local player board reference is null!");
         }
         board.AttackCommenced(hostSide, netIds);
+    }
+
+    [TargetRpc]
+    public void RpcBlockConfirmed(bool hostSide, List<uint> netIds)
+    {
+        if (!board)
+        {
+            throw new NullReferenceException("Client local player board reference is null!");
+        }
+        board.BlockConfirmed(hostSide, netIds);
     }
 
     public void RequestEndTurn()
@@ -133,25 +157,44 @@ public class NetworkGamePlayer : NetworkBehaviour
         CmdCommenceAttack(attackers);
     }
 
-    [Command]
+    public void RequestBlock()
+    {
+        List<uint> blockers = new List<uint>();
+        foreach (var creature in blockingCreatures)
+        {
+            blockers.Add(creature.netId);
+        }
+        CmdConfirmBlock(blockers);
+    }
+
+    public void RequestResolveCombat()
+    {
+        CmdResolveCombat();
+    }
+
+    [Command][LogReplay]
     public void CmdChangeState(TurnState state)
     {
+        ReplayHelper.LogCommandAuto(nameof(CmdChangeState), this, state);
         // It would be great to have some validation e.g. you can only go to ATTACK from PLAYING
         this.state = state;
     }
     
-    [Command]
+    [Command][LogReplay]
     public void CmdEndTurn()
     {
+        ReplayHelper.LogCommandAuto(nameof(CmdEndTurn), this);
         networkManager.turnManager.EndTurn(this);
     }
 
-    [Command]
+    [Command][LogReplay]
     public void CmdPlayCreature(string creatureIdentifier, int manaCost, int creatureSlot)
     {
+        ReplayHelper.LogCommandAuto(nameof(CmdPlayCreature), this, creatureIdentifier, manaCost, creatureSlot);
         if (manaCost > mana)
         {
-            throw new UnauthorizedAccessException("This shouldn't have been called.");
+            Debug.LogError("PlayCreature called without enough mana");
+            return;
         }
         mana -= manaCost;
         networkManager.serverBoard.CreaturePlayed(this, creatureSlot, creatureIdentifier);
@@ -164,11 +207,27 @@ public class NetworkGamePlayer : NetworkBehaviour
 
         }
     */
-    [Command]
+    [Command][LogReplay]
     public void CmdCommenceAttack(List<uint> creatureNetIds)
     {
+        ReplayHelper.LogCommandAuto(nameof(CmdCommenceAttack), this, creatureNetIds);
         networkManager.serverBoard.AttackByPlayer(this, creatureNetIds);
         networkManager.turnManager.ConfirmAttackers(this);
+    }
+
+    [Command][LogReplay]
+    public void CmdConfirmBlock(List<uint> creatureNetIds)
+    {
+        ReplayHelper.LogCommandAuto(nameof(CmdConfirmBlock), this, creatureNetIds);
+        networkManager.serverBoard.BlockByPlayer(this, creatureNetIds);
+        networkManager.turnManager.ConfirmBlockers(this);
+    }
+
+    [Command][LogReplay]
+    public void CmdResolveCombat()
+    {
+        ReplayHelper.LogCommandAuto(nameof(CmdResolveCombat), this);
+        networkManager.serverBoard.ResolveCombat(this);
     }
 /*
     [Command]
