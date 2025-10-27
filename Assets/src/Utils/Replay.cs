@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using Mirror;
-
+using Newtonsoft.Json;
 
 [Serializable]
 public class ReplayEvent
@@ -31,7 +31,7 @@ public static class ReplayLogger
 
     public static void SaveToFile(string path)
     {
-        string json = JsonUtility.ToJson(new ReplayEventList { events = events }, true);
+        string json = JsonConvert.SerializeObject(new ReplayEventList { events = events }, Formatting.Indented);
         File.WriteAllText(path, json);
     }
 

@@ -1,79 +1,20 @@
 {
-    "events": [
-        {
-            "commandName": "CmdPlayCreature",
-            "timestamp": 33.73566818237305,
-            "connectionId": "0"
-        },
-        {
-            "commandName": "CmdEndTurn",
-            "timestamp": 38.90514373779297,
-            "connectionId": "0"
-        },
-        {
-            "commandName": "CmdPlayCreature",
-            "timestamp": 55.400238037109378,
-            "connectionId": "1"
-        },
-        {
-            "commandName": "CmdPlayCreature",
-            "timestamp": 55.73357391357422,
-            "connectionId": "1"
-        },
-        {
-            "commandName": "CmdPlayCreature",
-            "timestamp": 55.73357391357422,
-            "connectionId": "1"
-        },
-        {
-            "commandName": "CmdPlayCreature",
-            "timestamp": 55.73357391357422,
-            "connectionId": "1"
-        },
-        {
-            "commandName": "CmdPlayCreature",
-            "timestamp": 55.73357391357422,
-            "connectionId": "1"
-        },
-        {
-            "commandName": "CmdPlayCreature",
-            "timestamp": 55.73357391357422,
-            "connectionId": "1"
-        },
-        {
-            "commandName": "CmdPlayCreature",
-            "timestamp": 55.73357391357422,
-            "connectionId": "1"
-        },
-        {
-            "commandName": "CmdEndTurn",
-            "timestamp": 59.829811096191409,
-            "connectionId": "1"
-        },
-        {
-            "commandName": "CmdChangeState",
-            "timestamp": 70.57335662841797,
-            "connectionId": "0"
-        },
-        {
-            "commandName": "CmdChangeState",
-            "timestamp": 70.57335662841797,
-            "connectionId": "0"
-        },
-        {
-            "commandName": "CmdCommenceAttack",
-            "timestamp": 72.32817840576172,
-            "connectionId": "0"
-        },
-        {
-            "commandName": "CmdConfirmBlock",
-            "timestamp": 90.15165710449219,
-            "connectionId": "1"
-        },
-        {
-            "commandName": "CmdResolveCombat",
-            "timestamp": 90.18578338623047,
-            "connectionId": "1"
-        }
-    ]
+  "events": [
+    {
+      "commandName": "CmdEndTurn",
+      "timestamp": 15.8538237,
+      "connectionId": "1",
+      "parameters": {}
+    },
+    {
+      "commandName": "CmdPlayCreature",
+      "timestamp": 22.5362339,
+      "connectionId": "0",
+      "parameters": {
+        "creatureIdentifier": "Cactus",
+        "manaCost": 1,
+        "creatureSlot": 3
+      }
+    }
+  ]
 }

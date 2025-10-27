@@ -102,39 +102,45 @@ public class Creature : Card
         health = Math.Min(maxHealth, health + healing);
     }
 
-    [Command]
+    [Command][LogReplay]
     public virtual void CmdToggleCanAttack(bool canAttack)
     {
+        ReplayHelper.LogCommandAuto(nameof(CmdToggleCanAttack), this, canAttack);
         this.canAttack = canAttack;
     }
 
-    [Command]
+    [Command][LogReplay]
     public virtual void CmdToggleAttack()
     {
+        ReplayHelper.LogCommandAuto(nameof(CmdToggleAttack), this);
         attacking = !attacking;
     }
 
-    [Command]
+    [Command][LogReplay]
     public virtual void CmdToggleBlock()
     {
+        ReplayHelper.LogCommandAuto(nameof(CmdToggleBlock), this);
         blocking = !blocking;
     }
 
-    [Command]
+    [Command][LogReplay]
     public virtual void CmdConfirmAttack()
     {
+        ReplayHelper.LogCommandAuto(nameof(CmdConfirmAttack), this);
         attackConfirmed = true;
     }
 
-    [Command]
+    [Command][LogReplay]
     public virtual void CmdConfirmBlock()
     {
+        ReplayHelper.LogCommandAuto(nameof(CmdConfirmBlock), this);
         blockConfirmed = true;
     }
 
-    [Command]
+    [Command][LogReplay]
     public virtual void CmdResetCombatState()
     {
+        ReplayHelper.LogCommandAuto(nameof(CmdResetCombatState), this);
         ResetCombatState();
     }
 
