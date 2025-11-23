@@ -1,20 +1,65 @@
 {
+  "prefabsToLoad": [
+    "Mimic",
+    "Skeleton"
+  ],
   "events": [
     {
-      "commandName": "CmdEndTurn",
-      "timestamp": 15.8538237,
-      "connectionId": "1",
+      "commandName": "CmdToggleCanAttack",
+      "timestamp": 8.608206,
+      "connectionId": "0",
+      "netId": 13,
+      "parameters": {
+        "canAttack": true
+      }
+    },
+    {
+      "commandName": "CmdToggleCanAttack",
+      "timestamp": 8.608206,
+      "connectionId": "0",
+      "netId": 13,
+      "parameters": {
+        "canAttack": true
+      }
+    },
+    {
+      "commandName": "CmdToggleAttack",
+      "timestamp": 8.608206,
+      "connectionId": "0",
+      "netId": 13,
       "parameters": {}
     },
     {
-      "commandName": "CmdPlayCreature",
-      "timestamp": 22.5362339,
+      "commandName": "CmdConfirmAttack",
+      "timestamp": 8.608206,
       "connectionId": "0",
+      "netId": 13,
+      "parameters": {}
+    },
+    {
+      "commandName": "CmdToggleCanAttack",
+      "timestamp": 8.608206,
+      "connectionId": "0",
+      "netId": 13,
       "parameters": {
-        "creatureIdentifier": "Cactus",
-        "manaCost": 1,
-        "creatureSlot": 3
+        "canAttack": true
       }
+    },
+    {
+      "commandName": "CmdToggleCanAttack",
+      "timestamp": 8.608206,
+      "connectionId": "0",
+      "netId": 13,
+      "parameters": {
+        "canAttack": true
+      }
+    },
+    {
+      "commandName": "CmdConfirmAttack",
+      "timestamp": 8.608206,
+      "connectionId": "0",
+      "netId": 13,
+      "parameters": {}
     }
   ]
 }

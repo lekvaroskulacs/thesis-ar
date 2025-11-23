@@ -5,9 +5,11 @@ using Mirror;
 
 public class StartGame : NetworkBehaviour
 {
+    [SerializeField] private DeckSelection deckSelection;
 
     [Header("Buttons")]
     [SerializeField] private Button startGameButton;
+    [SerializeField] private Button loadGameButton;
 
     private NetworkManagerImpl _networkManager;
     private NetworkManagerImpl networkManager
@@ -25,11 +27,20 @@ public class StartGame : NetworkBehaviour
     void Awake()
     {
         startGameButton.onClick.AddListener(GameStarted);
+        loadGameButton.onClick.AddListener(LoadGameStarted);
     }
 
     public void GameStarted()
     {
-        networkManager.ServerChangeScene("GameScene");
+        deckSelection.FinalizeDeck();
+        networkManager.StartGame();
+    }
+
+    public void LoadGameStarted()
+    {
+        deckSelection.creatureIdentifiers = ReplayLogger.LoadFromFile("game.replay").prefabsToLoad;
+        deckSelection.FinalizeDeck();
+        networkManager.LoadGame();
     }
 
 }

@@ -18,6 +18,9 @@ public class HUD : MonoBehaviour
 
     [SerializeField] private TMP_Text turnStateDisplay;
 
+    [SerializeField] private GameObject winScreen;
+    [SerializeField] private GameObject loseScreen;
+
     private NetworkManagerImpl _networkManager;
     private NetworkManagerImpl networkManager
     {
@@ -40,7 +43,7 @@ public class HUD : MonoBehaviour
 
     public void RegisterNetworkPlayer(NetworkGamePlayer player)
     {
-        this.player = player; 
+        this.player = player;
     }
 
     void Update()
@@ -112,7 +115,7 @@ public class HUD : MonoBehaviour
                     if (!field.creature)
                     {
                         break;
-                    }   
+                    }
                     field.toggleAttackButton.gameObject.SetActive(true);
                     field.toggleAttackButton.enabled = field.creature.canAttack;
                     field.toggleBlockButton.gameObject.SetActive(false);
@@ -162,5 +165,15 @@ public class HUD : MonoBehaviour
         player.RequestBlock();
     }
 
+
+    public void WinScreen()
+    {
+        winScreen.SetActive(true);
+    }
+    
+    public void LoseScreen()
+    {
+        loseScreen.SetActive(true);
+    }
 
 }

@@ -1,7 +1,26 @@
 {
-    "Board": "Prefabs/Board/Board",
-    "Skeleton": "Prefabs/Cards/Creatures/Skeleton",
-    "Fairy": "Prefabs/Cards/Creatures/GreenFairy",
-    "Cactus": "Prefabs/Cards/Creatures/Cactus",
-    "Beholder": "Prefabs/Cards/Creatures/Beholder"
+    "Board": {
+        "prefabPath": "Prefabs/Board/Board",
+        "trackedImagePath": "Images/Board/board"
+    },
+    "Skeleton": {
+        "prefabPath": "Prefabs/Cards/Creatures/Skeleton",
+        "trackedImagePath": "Images/Cards/Creatures/skeleton"
+    },
+    "Fairy": {
+        "prefabPath": "Prefabs/Cards/Creatures/GreenFairy",
+        "trackedImagePath": "Images/Cards/Creatures/fairy"
+    },
+    "Cactus": {
+        "prefabPath": "Prefabs/Cards/Creatures/Cactus",
+        "trackedImagePath": "Images/Cards/Creatures/cactus"
+    },
+    "Beholder": {
+        "prefabPath": "Prefabs/Cards/Creatures/Beholder",
+        "trackedImagePath": "Images/Cards/Creatures/beholder"
+    },
+    "Mimic": {
+        "prefabPath": "Prefabs/Cards/Creatures/Mimic",
+        "trackedImagePath": "Images/Cards/Creatures/mimic"
+    }
 }

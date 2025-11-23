@@ -16,12 +16,14 @@ public class CreatureField : MonoBehaviour
     [SerializeField] private SpriteRenderer field;
 
     [Header("Interface")]
-    [SerializeField] public OrderableText creatureHealthDisplay;
-    [SerializeField] public OrderableText creatureAttackDisplay;
+    [SerializeField] public TMP_Text creatureHealthDisplay;
+    [SerializeField] public TMP_Text creatureAttackDisplay;
     [SerializeField] public Button toggleAttackButton;
     [SerializeField] public Button toggleBlockButton;
     [SerializeField] public GameObject attackIcon;
     [SerializeField] public GameObject blockIcon;
+
+    [SerializeField] public Button fieldSelector;
 
     public bool IsGameObjectOnCreatureField(GameObject obj)
     {
@@ -50,8 +52,8 @@ public class CreatureField : MonoBehaviour
         {
             creatureAttackDisplay.gameObject.SetActive(true);
             creatureHealthDisplay.gameObject.SetActive(true);
-            creatureAttackDisplay.Text = creature.attack.ToString();
-            creatureHealthDisplay.Text = creature.health.ToString();
+            creatureAttackDisplay.text = creature.attack.ToString();
+            creatureHealthDisplay.text = creature.health.ToString();
 
             if (creature.attacking)
             {
@@ -85,6 +87,20 @@ public class CreatureField : MonoBehaviour
             attackIcon.SetActive(false);
             creatureAttackDisplay.gameObject.SetActive(false);
             creatureHealthDisplay.gameObject.SetActive(false);
+            toggleAttackButton.gameObject.SetActive(false);
+            toggleBlockButton.gameObject.SetActive(false);
+        }
+
+        if (owningPlayer)
+        {
+            if (owningPlayer.state == TurnState.MOVING_CREATURE)
+            {
+                fieldSelector.gameObject.SetActive(true);
+            }
+            else
+            {
+                fieldSelector.gameObject.SetActive(false);
+            }
         }
     }
 

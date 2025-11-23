@@ -18,6 +18,7 @@ public class ChooseName : NetworkBehaviour
     [Header("Buttons")]
     [SerializeField] private Button hostConfirmButton;
     [SerializeField] private Button clientConfirmButton;
+    
 
     private NetworkManagerImpl _networkManager;
     private NetworkManagerImpl networkManager
@@ -55,7 +56,7 @@ public class ChooseName : NetworkBehaviour
     {
         chooseClientNamePanel.SetActive(false);
         clientLobbyPanel.SetActive(true);
-        
+
         CmdSetPlayerName(clientNameInputField.text);
     }
 

@@ -103,4 +103,6 @@ MonoBehaviour:
   state: 0
   mana: 0
   maxMana: 0
+  playerHealth: 20
+  isHost: 0
   board: {fileID: 0}

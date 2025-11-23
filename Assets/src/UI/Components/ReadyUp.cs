@@ -6,6 +6,7 @@ using UnityEngine.UI;
 public class ReadyUp : NetworkBehaviour
 {
     [SerializeField] private Button readyButton;
+    [SerializeField] private DeckSelection deckSelection;
 
 
     void Awake()
@@ -19,6 +20,7 @@ public class ReadyUp : NetworkBehaviour
         if (player.ReadyUp())
         {
             readyButton.interactable = false;
+            deckSelection.FinalizeDeck();
         }
     }
 }

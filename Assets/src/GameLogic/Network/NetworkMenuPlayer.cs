@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Mirror;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -23,7 +24,16 @@ public class NetworkMenuPlayer : NetworkBehaviour
     public bool isReady;
 
     [SyncVar]
+    public bool deckFinalized = false;
+
+    [SyncVar]
+    public bool loadGame = false;
+
+    [SyncVar]
     public string displayName;
+
+    [SyncVar]
+    public List<string> spawnableCardIds = new List<string>();
 
     public bool isHost { get; set; } = false;
 
@@ -45,6 +55,19 @@ public class NetworkMenuPlayer : NetworkBehaviour
     public void CmdUpdateDisplayNames()
     {
         networkManager.UpdateDisplayNames();
+    }
+
+    public void RequestFinalizeDeck(List<string> cardIds)
+    {
+        CmdFinalizeDeck(cardIds);
+    }
+
+    [Command]
+    public void CmdFinalizeDeck(List<string> cardIds)
+    {
+        spawnableCardIds.AddRange(cardIds);
+        deckFinalized = true;
+        //networkManager.spawnableCardIds.AddRange(cardIds);
     }
 
     [ClientRpc]
@@ -88,6 +111,12 @@ public class NetworkMenuPlayer : NetworkBehaviour
         {
             ui.GameStartable();
         }
+    }
+
+    [Command]
+    public void CmdSetLoadGame(bool loadGame)
+    {
+        this.loadGame = loadGame;
     }
 
 }

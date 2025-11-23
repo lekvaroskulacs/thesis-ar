@@ -1,9 +1,11 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class Battlefield : MonoBehaviour
 {
     [SerializeField] private List<CreatureField> _hostFields;
+
     public List<CreatureField> hostFields
     {
         get

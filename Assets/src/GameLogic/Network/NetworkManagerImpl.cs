@@ -6,6 +6,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.XR.ARFoundation;
 using Telepathy;
+using System.Linq;
+using Unity.VisualScripting;
 
 
 /*
@@ -30,15 +32,18 @@ public class NetworkManagerImpl : NetworkManager
     [SerializeField] private StartingPlayer startingPlayer;
     [SerializeField] private GameObject serverBoardPrefab;
     [SerializeField] private GameObject networkBoardPrefab;
+    [SerializeField] private DeckSelection deckSelection;
+    public HashSet<string> spawnableCardIds = new HashSet<string>();
     public ServerBoard serverBoard { get; internal set; }
 
-    private string currentScene;
+    public string currentScene;
     public NetworkPlayers<NetworkMenuPlayer> players = new NetworkPlayers<NetworkMenuPlayer>();
     public NetworkPlayers<NetworkGamePlayer> gamePlayers = new NetworkPlayers<NetworkGamePlayer>();
     public TurnManager turnManager;
 
     public bool devDebug = false;
-
+    public bool loadGame = false;
+    public int boardReadyCnt = 0;
 
     public override void Awake()
     {
@@ -53,7 +58,7 @@ public class NetworkManagerImpl : NetworkManager
 
     public override void OnServerAddPlayer(NetworkConnectionToClient conn)
     {
-        var prefab = currentScene == gameScene ?
+        var prefab = currentScene != menuScene ?
             Resources.Load<GameObject>("Prefabs/GamePlayer") :
             Resources.Load<GameObject>("Prefabs/MenuPlayer");
 
@@ -66,18 +71,29 @@ public class NetworkManagerImpl : NetworkManager
             gamePlayers.Add(gamePlayer);
             GameObject networkBoardObj = Instantiate(networkBoardPrefab);
             NetworkServer.Spawn(networkBoardObj, conn);
-            /*
-            if (gamePlayers.host == gamePlayer)
-            {
-                gamePlayer.isHost = true;
-            }
-            */
         }
-        else
+        else if (currentScene == menuScene)
         {
             var menuPlayer = playerInstance.GetComponent<NetworkMenuPlayer>();
             menuPlayer.displayName = "";
+            if (players.data.Count > 0 && players.host.loadGame)
+            {
+                menuPlayer.loadGame = true;
+            }
             players.Add(menuPlayer);
+        }
+        else
+        {
+            GameObject player2 = Instantiate(prefab);
+            player2.name = $"{prefab.name} [connId=1]";
+            var gamePlayer1 = playerInstance.GetComponent<NetworkGamePlayer>();
+            var gamePlayer2 = player2.GetComponent<NetworkGamePlayer>();
+            gamePlayer1.isHost = true;
+            gamePlayer2.isHost = false;
+            gamePlayers.Add(gamePlayer1);
+            gamePlayers.Add(gamePlayer2);
+
+            NetworkServer.Spawn(player2, conn);
         }
 
     }
@@ -88,9 +104,17 @@ public class NetworkManagerImpl : NetworkManager
         {
             MenuDisconnected(conn);
         }
-        else
+        else if (currentScene == gameScene)
         {
             GameDisconnected(conn);
+        }
+    }
+
+    public override void OnClientDisconnect()
+    {
+        if (currentScene == menuScene)
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
     }
 
@@ -172,6 +196,14 @@ public class NetworkManagerImpl : NetworkManager
 
     void ServerLoadGame()
     {
+        if (loadGame)
+        {
+            StartCoroutine(SetupLoadedGame());
+            return;    
+        }
+
+        RegisterPrefabs(spawnableCardIds.ToList());
+        
         turnManager = GameObject.FindWithTag("TurnManager").GetComponent<TurnManager>();
         NetworkGamePlayer sPlayer = null;
         switch (startingPlayer)
@@ -192,45 +224,27 @@ public class NetworkManagerImpl : NetworkManager
 
     void ClientLoadGame()
     {
+        RegisterPrefabs(spawnableCardIds.ToList());
+
         var list = new List<ReferenceImageInfo>();
-        var tex = Resources.Load<Texture2D>("Images/Board/board");
-        list.Add(new ReferenceImageInfo(
-            tex,
-            "Board",
-            0.1f
-        ));
+        var catalogue = CardCatalogue.GetCatalogue();
+        var tex = Resources.Load<Texture2D>(catalogue["Board"].trackedImagePath);
+        list.Add(new ReferenceImageInfo(tex, "Board", 0.1f));
 
-
-        tex = Resources.Load<Texture2D>("Images/Cards/Creatures/skeleton");
-        list.Add(new ReferenceImageInfo(
-            tex,
-            "Skeleton",
-            0.1f
-        ));
-
-        tex = Resources.Load<Texture2D>("Images/Cards/Creatures/fairy");
-        list.Add(new ReferenceImageInfo(
-            tex,
-            "Fairy",
-            0.1f
-        ));
-
-        tex = Resources.Load<Texture2D>("Images/Cards/Creatures/cactus");
-        list.Add(new ReferenceImageInfo(
-            tex,
-            "Cactus",
-            0.1f
-        ));
-
-
+        foreach (var id in deckSelection.creatureIdentifiers)
+        {
+            tex = Resources.Load<Texture2D>(catalogue[id].trackedImagePath);
+            list.Add(new ReferenceImageInfo(tex, id, 0.1f));
+        }
+        
         var library = GameObject.FindGameObjectWithTag("Origin").GetComponent<MutableLibrary>();
-
         library.AddReferenceImages(list);
         library.StartTrackingImages();
 
+        var idList = new List<string> { "Board" };
+        idList.AddRange(deckSelection.creatureIdentifiers);
         var imgManager = GameObject.FindGameObjectWithTag("Origin").GetComponent<MultipleImageTrackingManager>();
-
-        imgManager.SetTrackedEntities(new List<string> { "Board", "Skeleton", "Fairy", "Cactus" });
+        imgManager.SetTrackedEntities(idList);
     }
 
     public void InitServerBoard()
@@ -240,6 +254,81 @@ public class NetworkManagerImpl : NetworkManager
         serverBoard.players = gamePlayers;
     }
 
+    public void InitReplay(NetworkGamePlayer startingPlayer)
+    {
+        turnManager = GameObject.FindWithTag("TurnManager").GetComponent<TurnManager>();
+        turnManager.Init(gamePlayers, startingPlayer);
+        InitServerBoard();
+    }
+
+    public void StartGame()
+    {
+        StartCoroutine(CollectCardIdsCoroutine());
+    }
+
+    IEnumerator CollectCardIdsCoroutine()
+    {
+        yield return new WaitUntil(() =>
+        {
+            foreach (var player in players.data)
+            {
+                if (!player.deckFinalized)
+                {
+                    return false;
+                }
+            }
+            return true;
+        });
+
+        foreach (var player in players.data)
+        {
+            spawnableCardIds.AddRange(player.spawnableCardIds);
+        }
+
+        ReplayLogger.LogPrefabsToLoad(spawnableCardIds.ToList());
+        ServerChangeScene("GameScene");
+    }
+    
+    public void RegisterPrefabs(List<string> cardIds)
+    {
+        foreach (var player in gamePlayers.data)
+        {
+            player.RpcRegisterCardPrefabs(cardIds);
+        }
+    }
+
+    public void LoadGame()
+    {
+        loadGame = true;
+        StartGame();
+    }
+
+    public IEnumerator SetupLoadedGame()
+    {
+        yield return new WaitUntil(() =>
+        {
+            return boardReadyCnt >= 2;
+        });
+
+        ReplayLogger.ReplayEventList eventList;
+        eventList = ReplayLogger.LoadFromFile("game.replay");
+        if (eventList.events.Count == 0)
+        {
+            Debug.LogError("Replay is empty");
+        }
+
+
+        turnManager = GameObject.FindWithTag("TurnManager").GetComponent<TurnManager>();
+        turnManager.Init(gamePlayers, gamePlayers.data[Int32.Parse(eventList.events[0]?.connectionId ?? "0")]);
+        InitServerBoard();
+
+        foreach (var evt in eventList.events)
+        {
+            var player = gamePlayers.data[Int32.Parse(evt.connectionId)];
+
+            ReplayHelper.ProcessCommand(evt);
+        }
+    }
 
     #region RPCs
 
@@ -255,6 +344,12 @@ public class NetworkManagerImpl : NetworkManager
             var opponent = players.Other(player);
             player.RpcSetOpponentName(opponent?.displayName);
         }
+    }
+
+    public void EndGame(NetworkGamePlayer loser)
+    {
+        loser.RpcLoseGame();
+        gamePlayers.Other(loser).RpcWinGame();
     }
 
     #endregion

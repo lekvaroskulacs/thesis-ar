@@ -11,8 +11,8 @@ public class Creature : Card
     [SyncVar] private int _health;
     [SyncVar(hook = nameof(HookAttackToggled))] private bool _attacking = false;
     [SyncVar(hook = nameof(HookBlockToggled))] private bool _blocking = false;
-    [SyncVar] private bool _attackConfirmed = false;
-    [SyncVar] private bool _blockConfirmed = false;
+    [SyncVar(hook = nameof(HookAttackConfirmed))] private bool _attackConfirmed = false;
+    [SyncVar(hook = nameof(HookBlockConfirmed))] private bool _blockConfirmed = false;
     [SyncVar] private bool _canAttack = false;
 
     public int attack
@@ -63,8 +63,8 @@ public class Creature : Card
         internal set { _canAttack = value; }
     }
 
-    private NetworkManagerImpl _networkManager;
-    private NetworkManagerImpl networkManager
+    protected NetworkManagerImpl _networkManager;
+    protected NetworkManagerImpl networkManager
     {
         get
         {
@@ -76,7 +76,7 @@ public class Creature : Card
         }
     }
 
-    void Awake()
+    virtual protected void Awake()
     {
         health = maxHealth;
     }
@@ -196,10 +196,14 @@ public class Creature : Card
         CmdConfirmAttack();
     }
 
+    public virtual void HookAttackConfirmed(bool oldValue, bool newValue) {}
+
     public virtual void RequestConfirmBlock()
     {
         CmdConfirmBlock();
     }
+
+    public virtual void HookBlockConfirmed(bool oldValue, bool newValue) {}
 
     public virtual void RequestResetCombatState()
     {

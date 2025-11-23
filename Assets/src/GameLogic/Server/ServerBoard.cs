@@ -10,15 +10,6 @@ public class ServerBoard : NetworkBehaviour
     public ServerBattlefield battlefield;
     public NetworkPlayers<NetworkGamePlayer> players;
 
-    private Dictionary<string, string> catalogue = new Dictionary<string, string>
-    {
-        { "Skeleton", "Prefabs/Cards/Creatures/Skeleton" },
-        { "Fairy", "Prefabs/Cards/Creatures/GreenFairy" },
-        { "Cactus", "Prefabs/Cards/Creatures/Cactus"},
-        { "Beholder", "Prefabs/Cards/Creatures/Beholder"}
-        // Add more here as needed
-    };
-
     private List<Creature> currentAttackers = new List<Creature>();
     private List<Creature> currentBlockers = new List<Creature>();
     
@@ -36,9 +27,13 @@ public class ServerBoard : NetworkBehaviour
     }
 
 
-    public void CreaturePlayed(NetworkGamePlayer player, int creatureSlot, string creatureIdentifier)
+    public bool CreaturePlayed(NetworkGamePlayer player, int creatureSlot, string creatureIdentifier)
     {
-        var creature = Instantiate(Resources.Load<GameObject>(catalogue[creatureIdentifier]));
+        if (battlefield.FieldsOfPlayer(player)[creatureSlot].creature != null)
+        {
+            return false;
+        }
+        var creature = Instantiate(CardCatalogue.GetPrefabForCard(creatureIdentifier));
         NetworkServer.Spawn(creature, player.netIdentity.connectionToClient);
         var c = creature.GetComponent<Creature>();
         c.owningPlayer = player;
@@ -48,6 +43,7 @@ public class ServerBoard : NetworkBehaviour
         {
             p.RpcCreaturePlayed(player.isHost, creatureSlot, creature.GetComponent<NetworkIdentity>().netId);
         }
+        return true;
     }
 
     public void CreatureDestroyed(NetworkGamePlayer player, Creature creature)
@@ -151,6 +147,48 @@ public class ServerBoard : NetworkBehaviour
             }
         }
     }
-    
+
+    public void MoveCreature(Creature creature, int location)
+    {
+        var fields = battlefield.allFields;
+        var ids = new List<uint>();
+        for (int i = 0; i < fields.Count; ++i)
+        {
+            if (location != i && fields[i].creature == creature)
+            {
+                fields[i].creature = null;
+            }
+
+            if (location == i)
+            {
+                ServerCreatureField originalField = null;
+                foreach (var field in fields)
+                {
+                    if (field.creature == creature)
+                    {
+                        originalField = field;
+                    }
+                }
+                fields[i].creature = creature;
+                originalField.creature = null;
+            }
+
+            uint id;
+            if (fields[i].creature == null)
+            {
+                id = 0;
+            }
+            else
+            {
+                id = fields[i].creature.netId;
+            }
+            ids.Add(id);
+        }
+
+        foreach (var p in players.data)
+        {
+            p.RpcUpdateCreatureLocations(ids);
+        }
+    }
     
 }

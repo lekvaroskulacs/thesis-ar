@@ -5,24 +5,28 @@ using System.Linq;
 using Mirror;
 using Mirror.BouncyCastle.Crypto.Modes;
 using Mirror.Examples.Basic;
+using TMPro;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SocialPlatforms;
 
 internal enum BoardState
 {
-    NOT_READY, READY, PLAYING
+    NOT_READY, READY, REPLAY, PLAYING
 }
 
 public class Board : NetworkBehaviour
 {
+    [SerializeField] private TMP_Text hostPlayerHealth;
+    [SerializeField] private TMP_Text guestPlayerHealth;
     private BoardTracker boardTracker;
     private BoardState state;
     private Action boardReady;
 
 
-    [SerializeField] private Battlefield battlefield;
+    [SerializeField] public Battlefield battlefield;
     private NetworkGamePlayer localPlayer;
+    private NetworkGamePlayer opponentPlayer;
 
     public List<GameObject> playableCardGameObjects;
 
@@ -54,19 +58,29 @@ public class Board : NetworkBehaviour
 
     void Start()
     {
+        if (networkManager.currentScene == "ReplayScene")
+        {
+            return;
+        }
+        
         boardTracker = GameObject.FindWithTag("BoardTracker").GetComponent<BoardTracker>();
         boardTracker.board = this;
+
+        var ids = new List<string>();
         foreach (var gameobj in boardTracker.allLoadedGameObjects)
         {
-            var prefab = CardCatalogue.GetPrefabForCard(gameobj.GetComponent<Creature>().creatureIdentifier);
-            NetworkClient.RegisterPrefab(prefab);
+            var creatureId = gameobj.GetComponent<Creature>().creatureIdentifier;
+            var prefab = CardCatalogue.GetPrefabForCard(creatureId);
+            //NetworkClient.RegisterPrefab(prefab);
             playableCardGameObjects.Add(prefab);
+            ids.Add(creatureId);
         }
 
         var players = GameObject.FindGameObjectsWithTag("NetworkGamePlayer");
         var player = players.Single(player => player.GetComponent<NetworkGamePlayer>().isLocalPlayer);
         localPlayer = player.GetComponent<NetworkGamePlayer>();
         localPlayer.board = this;
+        opponentPlayer = players.Single(player => !player.GetComponent<NetworkGamePlayer>().isLocalPlayer).GetComponent<NetworkGamePlayer>();
     }
 
     void Update()
@@ -83,12 +97,19 @@ public class Board : NetworkBehaviour
 
     void UpdateNotReady()
     {
+        if (networkManager.currentScene == "ReplayScene")
+        {
+            return;
+        }
+
         if (boardTracker.GetTrackedObjectStatus() == UnityEngine.XR.ARSubsystems.TrackingState.Tracking)
         {
             Debug.Log("Board ready");
             state = BoardState.READY;
             OnBoardReady();
         }
+
+        
     }
 
     void UpdateReady()
@@ -116,6 +137,17 @@ public class Board : NetworkBehaviour
                 }
             }
         }
+
+        if (localPlayer.isHost)
+        {
+            hostPlayerHealth.text = localPlayer.playerHealth.ToString();
+            guestPlayerHealth.text = opponentPlayer.playerHealth.ToString();
+        }
+        else
+        {
+            guestPlayerHealth.text = localPlayer.playerHealth.ToString();
+            hostPlayerHealth.text = opponentPlayer.playerHealth.ToString();
+        }
     }
 
     void OnBoardReady()
@@ -125,6 +157,7 @@ public class Board : NetworkBehaviour
         {
             field.owningPlayer = localPlayer;
         }
+        localPlayer.CmdBoardReady();
     }
 
     void PlayCreature(Creature creature, int creatureSlot)
@@ -197,10 +230,60 @@ public class Board : NetworkBehaviour
 
         if (localPlayer.isHost == hostSide)
         {
-            localPlayer.CmdResolveCombat();        
+            localPlayer.CmdResolveCombat();
         }
     }
 
-    
+    public void InitReplay()
+    {
+        //should only add ones that are stored in the replay file
+        foreach (var card in CardCatalogue.GetCatalogue())
+        {
+            var prefab = CardCatalogue.GetPrefabForCard(card.Key);
+            NetworkClient.RegisterPrefab(prefab);
+        }
+        state = BoardState.REPLAY;
 
+        localPlayer = networkManager.gamePlayers.host;
+        localPlayer.board = this;
+        networkManager.gamePlayers.Other(localPlayer).board = this;
+    }
+
+    public void UpdateCreatureLocations(List<uint> netIds)
+    {
+        var fields = battlefield.allFields;
+        for (int i = 0; i < fields.Count; ++i)
+        {
+            Creature creature = null;
+            if (netIds[i] != 0)
+            {
+                creature = NetworkClient.spawned[netIds[i]].gameObject.GetComponent<Creature>();
+            }
+
+            if (creature == null)
+            {
+                fields[i].creature = null;
+                continue;
+            }
+
+            CreatureField originalField = null;
+            foreach (var field in fields)
+            {
+                if (field.creature == creature)
+                {
+                    originalField = field;
+                }
+            }
+
+            if (originalField == null)
+            {
+                Debug.LogError("Original field not found when moving. This shouldn't happen");
+            }
+            fields[i].creature = creature;
+            originalField.creature = null;
+
+            creature.transform.SetParent(fields[i].transform);
+            creature.transform.position = fields[i].transform.position;
+        }
+    }
 }

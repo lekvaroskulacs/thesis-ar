@@ -3,10 +3,19 @@ using System.IO;
 using UnityEngine;
 
 using Newtonsoft.Json;
+using System;
+
+[Serializable]
+public class CardInfo
+{
+    public string prefabPath;
+    public string trackedImagePath;
+}
+
 public class CardCatalogue
 {
-    static private Dictionary<string, string> _catalogue;
-    static public Dictionary<string, string> GetCatalogue()
+    static private Dictionary<string, CardInfo> _catalogue;
+    static public Dictionary<string, CardInfo> GetCatalogue()
     {
         if (_catalogue != null)
         {
@@ -38,7 +47,7 @@ public class CardCatalogue
         }
 #endif
 
-        var loadedCatalogue = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+        var loadedCatalogue = JsonConvert.DeserializeObject<Dictionary<string, CardInfo>>(json);
         if (loadedCatalogue != null)
         {
             _catalogue = loadedCatalogue;
@@ -52,6 +61,6 @@ public class CardCatalogue
 
     static public GameObject GetPrefabForCard(string key)
     {
-        return Resources.Load<GameObject>(GetCatalogue()[key]);
+        return Resources.Load<GameObject>(GetCatalogue()[key].prefabPath);
     }
 }

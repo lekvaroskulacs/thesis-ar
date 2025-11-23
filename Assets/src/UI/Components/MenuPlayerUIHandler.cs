@@ -25,6 +25,7 @@ public class MenuPlayerUIHandler : MonoBehaviour
     private TMP_Text opponentDisplay;
 
     [SerializeField] Button startGameButton;
+    [SerializeField] Button loadGameButton;
 
     public void ClientStart(bool isHost)
     {
@@ -41,5 +42,6 @@ public class MenuPlayerUIHandler : MonoBehaviour
         }
 
         startGameButton.interactable = true;
+        loadGameButton.interactable = true;
     }
 }

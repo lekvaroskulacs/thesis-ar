@@ -11,13 +11,16 @@ public enum TurnState
     BLOCKING,
     ATTACKING,
     PLAYING_AFTER_ATTACK,
-    COMBAT_ANIMATIONS
+    COMBAT_ANIMATIONS,
+    MOVING_CREATURE,
 }
 
 public class TurnManager : NetworkBehaviour
 {
     NetworkPlayers<NetworkGamePlayer> players;
     NetworkGamePlayer currentPlayer;
+
+    TurnState returnStateFromMoving;
 
 
     // not sure if this works on the clients
@@ -67,5 +70,16 @@ public class TurnManager : NetworkBehaviour
 
         var otherPlayer = players.Other(player);
         otherPlayer.state = TurnState.BLOCKING;
+    }
+
+    public void MovingCreature(NetworkGamePlayer player)
+    {
+        returnStateFromMoving = player.state;
+        player.state = TurnState.MOVING_CREATURE;
+    }
+
+    public void EndMovingCreature(NetworkGamePlayer player)
+    {
+        player.state = returnStateFromMoving;
     }
 }

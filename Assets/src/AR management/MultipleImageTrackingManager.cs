@@ -17,7 +17,7 @@ public class MultipleImageTrackingManager : MonoBehaviour
     private Dictionary<string, GameObject> nameToGameObject;
     public event Action OnPrefabsLoaded;
 
-    private Dictionary<string, string> catalogue;
+    private Dictionary<string, CardInfo> catalogue;
 
     public GameObject GetGameObjectByReferenceImageName(string name)
     {
@@ -91,17 +91,17 @@ public class MultipleImageTrackingManager : MonoBehaviour
 
     GameObject LoadPrefab(string cardName)
     {
-        if (!catalogue.TryGetValue(cardName, out string path))
+        if (!catalogue.TryGetValue(cardName, out CardInfo info))
         {
             Debug.LogWarning($"CardCatalogue: No entry found for '{cardName}'");
             return null;
         }
 
-        GameObject prefab = Resources.Load<GameObject>(path);
+        GameObject prefab = Resources.Load<GameObject>(info.prefabPath);
 
         if (prefab == null)
         {
-            Debug.LogError($"CardCatalogue: Failed to load prefab at '{path}' for '{cardName}'");
+            Debug.LogError($"CardCatalogue: Failed to load prefab at '{info.prefabPath}' for '{cardName}'");
         }
 
         return prefab;
