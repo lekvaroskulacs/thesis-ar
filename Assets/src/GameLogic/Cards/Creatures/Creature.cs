@@ -180,7 +180,7 @@ public class Creature : Card
     }
 
     public virtual void HookBlockToggled(bool oldValue, bool newValue)
-    {
+    {   
         if (blocking)
         {
             owningPlayer.blockingCreatures.Add(this);

@@ -7,6 +7,8 @@ using Newtonsoft.Json;
 using Unity.VisualScripting;
 using Newtonsoft.Json.Linq;
 using System.Linq;
+using System.Collections;
+using System.Threading;
 
 [Serializable]
 public class ReplayEvent
@@ -39,14 +41,29 @@ public static class ReplayLogger
         });
     }
 
-    public static void SaveToFile(string path)
+    public static void SaveToFile(string fileName)
     {
+    #if UNITY_ANDROID && !UNITY_EDITOR
+        string path = Path.Combine(Application.persistentDataPath, fileName);
+    #else
+        string path = fileName;
+    #endif
         string json = JsonConvert.SerializeObject(eventList, Formatting.Indented);
         File.WriteAllText(path, json);
     }
 
-    public static ReplayEventList LoadFromFile(string path)
+    public static ReplayEventList LoadFromFile(string fileName)
     {
+    #if UNITY_ANDROID && !UNITY_EDITOR
+        string path = Path.Combine(Application.persistentDataPath, fileName);
+    #else
+        string path = fileName;
+    #endif
+        if (!File.Exists(path))
+        {
+            Debug.LogError("Replay file not found: " + path);
+            return null;
+        }
         var str = File.ReadAllText(path);
         ReplayEventList replayEvents = JsonConvert.DeserializeObject<ReplayEventList>(str);
         return replayEvents;
@@ -63,8 +80,10 @@ public static class ReplayLogger
 [AttributeUsage(AttributeTargets.Method)]
 public class LogReplayAttribute : Attribute { }
 
-public static class ReplayHelper
+public  class ReplayHelper : MonoBehaviour
 {
+   
+
     public static void LogCommandAuto(string commandName, object instance, params object[] args)
     {
         var parameters = new Dictionary<string, object>();
@@ -80,80 +99,5 @@ public static class ReplayHelper
             parameters);
     }
 
-    public static void ProcessCommand(ReplayEvent evt)
-    {   
-        NetworkGamePlayer player = NetworkServer.spawned[evt.netId].GetComponent<NetworkGamePlayer>();
-        if (evt.commandName == "CmdPlayCreature")
-        {
-            player.PlayCreature(
-                evt.parameters["creatureIdentifier"].ToString(),
-                Convert.ToInt32(evt.parameters["manaCost"]),
-                Convert.ToInt32(evt.parameters["creatureSlot"])
-            );
-        }
-        
-        if (evt.commandName == "CmdEndTurn")
-        {
-            player.EndTurn();
-        }
-
-        if (evt.commandName == "CmdChangeState")
-        {
-            player.ChangeState(
-                (TurnState) Convert.ToInt32(evt.parameters["state"])
-            );
-        }
-
-        if (evt.commandName == "CmdCommenceAttack")
-        {
-            player.CommenceAttack(
-                (evt.parameters["creatureNetIds"] as JArray).ToObject<List<uint>>()
-            );
-        }
-
-        if (evt.commandName == "CmdConfirmBlock")
-        {
-           player.ConfirmBlock(
-                (evt.parameters["creatureNetIds"] as JArray).ToObject<List<uint>>()
-            );
-        }
-
-        if (evt.commandName == "CmdResolveCombat")
-        {
-           player.ResolveCombat();
-        }
-
-        Creature cr = NetworkServer.spawned[evt.netId].GetComponent<Creature>();
-        if (evt.commandName == "CmdToggleCanAttack")
-        {
-            cr.CmdToggleCanAttack(
-                (bool) evt.parameters["canAttack"]
-            );
-        }
-
-        if (evt.commandName == "CmdToggleAttack")
-        {
-            cr.CmdToggleAttack();
-        }
-
-        if (evt.commandName == "CmdToggleCanBlock")
-        {
-            cr.CmdToggleAttack();
-        }
-
-        if (evt.commandName == "CmdConfirmAttack")
-        {
-            cr.CmdConfirmAttack();
-        }
-
-        if (evt.commandName == "CmdConfirmBlock")
-        {
-            cr.CmdConfirmBlock();
-        }
-
-        if (evt.commandName == "CmdResetCombatState")
-        {
-            cr.CmdResetCombatState();
-        }
-    }
+    
 }

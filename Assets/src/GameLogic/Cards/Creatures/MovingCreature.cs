@@ -8,14 +8,14 @@ public class MovingCreature : Creature
 {
     protected List<CreatureField> creatureFields = new List<CreatureField>();
 
-    private int targetField;
+    public int targetField;
 
     virtual protected int TargetField()
     {
         return targetField;
     }
 
-    protected void MoveToTargetField()
+    public void MoveToTargetField()
     {
         networkManager.serverBoard.MoveCreature(this, TargetField());
         networkManager.turnManager.EndMovingCreature(owningPlayer);
@@ -31,7 +31,7 @@ public class MovingCreature : Creature
 
     public override void HookBlockToggled(bool oldValue, bool newValue)
     {
-        base.HookAttackToggled(oldValue, newValue);
+        base.HookBlockToggled(oldValue, newValue);
 
         if (blocking == true)
         {
@@ -41,6 +41,10 @@ public class MovingCreature : Creature
                 int fieldIndex = i;
                 lambdas.Add(() =>
                 {
+                    ReplayLogger.LogCommand("MoveToField", connectionToClient.connectionId, netId, new Dictionary<string, object>()
+                    {
+                        {"field", fieldIndex}
+                    });
                     targetField = fieldIndex;
                     CmdMoveCreature();
                 });
@@ -68,6 +72,11 @@ public class MovingCreature : Creature
     public void CmdMovingCreatureState()
     {
         ReplayHelper.LogCommandAuto(nameof(CmdMovingCreatureState), this);
+        MovingCreatureState();
+    }
+
+    public void MovingCreatureState()
+    {
         if (blocking == true)
         {
             networkManager.turnManager.MovingCreature(owningPlayer);

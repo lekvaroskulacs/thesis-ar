@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Linq;
@@ -58,6 +59,12 @@ public class Board : NetworkBehaviour
 
     void Start()
     {
+        var players = GameObject.FindGameObjectsWithTag("NetworkGamePlayer");
+        var player = players.Single(player => player.GetComponent<NetworkGamePlayer>().isLocalPlayer);
+        localPlayer = player.GetComponent<NetworkGamePlayer>();
+        localPlayer.board = this;
+        opponentPlayer = players.Single(player => !player.GetComponent<NetworkGamePlayer>().isLocalPlayer).GetComponent<NetworkGamePlayer>();
+        
         if (networkManager.currentScene == "ReplayScene")
         {
             return;
@@ -76,15 +83,25 @@ public class Board : NetworkBehaviour
             ids.Add(creatureId);
         }
 
-        var players = GameObject.FindGameObjectsWithTag("NetworkGamePlayer");
-        var player = players.Single(player => player.GetComponent<NetworkGamePlayer>().isLocalPlayer);
-        localPlayer = player.GetComponent<NetworkGamePlayer>();
-        localPlayer.board = this;
-        opponentPlayer = players.Single(player => !player.GetComponent<NetworkGamePlayer>().isLocalPlayer).GetComponent<NetworkGamePlayer>();
     }
 
     void Update()
     {
+        if (networkManager.currentScene == "ReplayScene")
+        {
+            if (localPlayer.isHost)
+            {
+                hostPlayerHealth.text = localPlayer.playerHealth.ToString();
+                guestPlayerHealth.text = opponentPlayer.playerHealth.ToString();
+            }
+            else
+            {
+                guestPlayerHealth.text = localPlayer.playerHealth.ToString();
+                hostPlayerHealth.text = opponentPlayer.playerHealth.ToString();
+            }
+            return;
+        }
+
         if (state == BoardState.NOT_READY)
         {
             UpdateNotReady();
@@ -173,11 +190,12 @@ public class Board : NetworkBehaviour
         creature.transform.position = field.transform.position;
         creature.transform.rotation = field.transform.rotation;
         creature.transform.parent = field.transform;
-
+/*
         if (battlefield.FieldsOfPlayer(localPlayer).Contains(field))
         {
             creature.owningPlayer = localPlayer;
         }
+*/
     }
 
     public void CreatureDestroyed(bool hostSide, int creatureSlot)
@@ -236,10 +254,10 @@ public class Board : NetworkBehaviour
 
     public void InitReplay()
     {
-        //should only add ones that are stored in the replay file
-        foreach (var card in CardCatalogue.GetCatalogue())
+        var cardIds = ReplayLogger.LoadFromFile("game.replay").prefabsToLoad;
+        foreach (var card in cardIds)
         {
-            var prefab = CardCatalogue.GetPrefabForCard(card.Key);
+            var prefab = CardCatalogue.GetPrefabForCard(card);
             NetworkClient.RegisterPrefab(prefab);
         }
         state = BoardState.REPLAY;
@@ -266,6 +284,7 @@ public class Board : NetworkBehaviour
                 continue;
             }
 
+/*
             CreatureField originalField = null;
             foreach (var field in fields)
             {
@@ -279,9 +298,9 @@ public class Board : NetworkBehaviour
             {
                 Debug.LogError("Original field not found when moving. This shouldn't happen");
             }
-            fields[i].creature = creature;
             originalField.creature = null;
-
+*/
+            fields[i].creature = creature;
             creature.transform.SetParent(fields[i].transform);
             creature.transform.position = fields[i].transform.position;
         }

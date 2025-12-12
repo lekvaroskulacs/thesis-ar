@@ -27,6 +27,7 @@ public class ServerBoard : NetworkBehaviour
     }
 
 
+
     public bool CreaturePlayed(NetworkGamePlayer player, int creatureSlot, string creatureIdentifier)
     {
         if (battlefield.FieldsOfPlayer(player)[creatureSlot].creature != null)
@@ -39,11 +40,19 @@ public class ServerBoard : NetworkBehaviour
         c.owningPlayer = player;
         battlefield.FieldsOfPlayer(player)[creatureSlot].creature = c;
 
+        LogCreaturePlayed(creature.GetComponent<NetworkIdentity>().netId);
+
         foreach (var p in players.data)
         {
             p.RpcCreaturePlayed(player.isHost, creatureSlot, creature.GetComponent<NetworkIdentity>().netId);
         }
         return true;
+    }
+
+    [LogReplay]
+    public void LogCreaturePlayed(uint netId)
+    {
+        ReplayHelper.LogCommandAuto(nameof(LogCreaturePlayed), this, netId);
     }
 
     public void CreatureDestroyed(NetworkGamePlayer player, Creature creature)
@@ -97,7 +106,7 @@ public class ServerBoard : NetworkBehaviour
         var playerCreatures = battlefield.CreaturesOfPlayer(player);
         foreach (var id in blockerIds)
         {
-            var gameObject = NetworkServer.spawned[id].gameObject;
+            var gameObject = NetworkServer.spawned[id].gameObject.gameObject;
             var creature = gameObject.GetComponent<Creature>();
             if (!creature)
             {

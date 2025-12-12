@@ -39,11 +39,16 @@ public class ReplayManager : MonoBehaviour
         board.InitReplay();
         networkManager.InitReplay(networkManager.gamePlayers.data[Int32.Parse(eventList.events[0].connectionId)]);
 
+        var obj = new GameObject();
+        obj.AddComponent<ReplayProcessor>();
+        obj.AddComponent<NetworkIdentity>();
+        var processor = obj.GetComponent<ReplayProcessor>();
+        NetworkServer.Spawn(obj);
+
         foreach (var evt in eventList.events)
         {
-            var player = networkManager.gamePlayers.data[Int32.Parse(evt.connectionId)];
-
-            ReplayHelper.ProcessCommand(evt);
+            yield return new WaitUntil(() => processor.canExecuteNext);
+            processor.ProcessCommand(evt, true);
 
             yield return new WaitForSeconds(1f);
         }

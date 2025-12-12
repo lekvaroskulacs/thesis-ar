@@ -126,6 +126,12 @@ public class NetworkGamePlayer : NetworkBehaviour
         {
             throw new NullReferenceException("Client local player board reference is null!");
         }
+        if (networkManager.loadGame && !NetworkClient.spawned.ContainsKey(netId))
+        {
+            //maybe solution is for loadgame to just work on server? prob not good either
+            Debug.LogError("Spawned creature not found. This can happen when server side loading is too fast, and the creature already died");
+            return;
+        }
         var creatureObj = NetworkClient.spawned[netId].gameObject;
         var creature = creatureObj.GetComponent<Creature>();    
         board.CreaturePlayed(hostSide, creatureSlot, creature);
@@ -228,7 +234,7 @@ public class NetworkGamePlayer : NetworkBehaviour
         {
             blockers.Add(creature.netId);
         }
-        CmdConfirmBlock(blockers);
+        CmdCommenceBlock(blockers);
     }
 
     public void RequestResolveCombat()
@@ -277,7 +283,8 @@ public class NetworkGamePlayer : NetworkBehaviour
         }
         if (!networkManager.serverBoard.CreaturePlayed(this, creatureSlot, creatureIdentifier))
         {
-            Debug.LogError("Creature already exists in this slot!");
+            Debug.LogError("Creature already exists in this slot or player in wrong state!");
+            return;
         }
         mana -= manaCost;
     }
@@ -296,9 +303,9 @@ public class NetworkGamePlayer : NetworkBehaviour
     }
 
     [Command][LogReplay]
-    public void CmdConfirmBlock(List<uint> creatureNetIds)
+    public void CmdCommenceBlock(List<uint> creatureNetIds)
     {
-        ReplayHelper.LogCommandAuto(nameof(CmdConfirmBlock), this, creatureNetIds);
+        ReplayHelper.LogCommandAuto(nameof(CmdCommenceBlock), this, creatureNetIds);
         ConfirmBlock(creatureNetIds);
     }
 

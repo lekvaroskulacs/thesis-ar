@@ -43,6 +43,7 @@ public class NetworkManagerImpl : NetworkManager
 
     public bool devDebug = false;
     public bool loadGame = false;
+    public bool replay = false;
     public int boardReadyCnt = 0;
 
     public override void Awake()
@@ -196,13 +197,13 @@ public class NetworkManagerImpl : NetworkManager
 
     void ServerLoadGame()
     {
+        RegisterPrefabs(spawnableCardIds.ToList());
+
         if (loadGame)
         {
             StartCoroutine(SetupLoadedGame());
             return;    
         }
-
-        RegisterPrefabs(spawnableCardIds.ToList());
         
         turnManager = GameObject.FindWithTag("TurnManager").GetComponent<TurnManager>();
         NetworkGamePlayer sPlayer = null;
@@ -256,6 +257,7 @@ public class NetworkManagerImpl : NetworkManager
 
     public void InitReplay(NetworkGamePlayer startingPlayer)
     {
+        replay = true;
         turnManager = GameObject.FindWithTag("TurnManager").GetComponent<TurnManager>();
         turnManager.Init(gamePlayers, startingPlayer);
         InitServerBoard();
@@ -319,14 +321,49 @@ public class NetworkManagerImpl : NetworkManager
 
 
         turnManager = GameObject.FindWithTag("TurnManager").GetComponent<TurnManager>();
-        turnManager.Init(gamePlayers, gamePlayers.data[Int32.Parse(eventList.events[0]?.connectionId ?? "0")]);
+        turnManager.Init(gamePlayers,  gamePlayers.data.Find((p) => p.connectionToClient.connectionId == Convert.ToInt32(eventList.events[0]?.connectionId ?? "0")));
         InitServerBoard();
+
+
+        var obj = new GameObject();
+        obj.AddComponent<ReplayProcessor>();
+        obj.AddComponent<NetworkIdentity>();
+        var processor = obj.GetComponent<ReplayProcessor>();
+        NetworkServer.Spawn(obj);
+
+        yield return new WaitUntil(() =>
+        {
+            return gamePlayers.data[0].mana == 1 || gamePlayers.data[1].mana == 1;
+        });
 
         foreach (var evt in eventList.events)
         {
-            var player = gamePlayers.data[Int32.Parse(evt.connectionId)];
+            yield return new WaitUntil(() => processor.canExecuteNext);
+            processor.ProcessCommand(evt);
+        }
+    }
 
-            ReplayHelper.ProcessCommand(evt);
+    public NetworkIdentity GetSpawnedObject(uint id)
+    {
+        if (replay || loadGame)
+        {
+            return FindFirstObjectByType<ReplayProcessor>().replayIdToNetObj[id];
+        }
+        else
+        {
+            return NetworkServer.spawned[id];
+        }
+    }
+
+    public NetworkIdentity GetSpawnedObjectClient(uint id)
+     {
+        if (replay)
+        {
+            return FindFirstObjectByType<ReplayProcessor>().replayIdToNetObj[id];
+        }
+        else
+        {
+            return NetworkClient.spawned[id];
         }
     }
 
